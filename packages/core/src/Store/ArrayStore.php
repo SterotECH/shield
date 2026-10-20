@@ -13,7 +13,7 @@ namespace Stero\Shield\Store;
  * - Take a clock in the constructor (a callable returning the current Unix
  *   time, default time()). Tests move time forward by changing what the
  *   clock returns, so TTL behaviour can be tested without sleeping.
- * - Treat an entry as missing once its expiry is in the past.
+ * - Treat an entry as missing at or after its expiry.
  */
 final class ArrayStore implements Store
 {
@@ -30,7 +30,7 @@ final class ArrayStore implements Store
     {
         try {
             $now = $this->clock === null ? time() : ($this->clock)();
-            if (!isset($this->counters[$key]) || $this->counters[$key]['expiresAt'] < $now) {
+            if (!isset($this->counters[$key]) || $this->counters[$key]['expiresAt'] <= $now) {
                 $this->counters[$key] = ['value' => 0, 'expiresAt' => $now + $windowSeconds];
             }
 
@@ -56,7 +56,7 @@ final class ArrayStore implements Store
             if (!isset($this->bans[$ip])) {
                 return false;
             }
-            if ($this->bans[$ip] < $now) {
+            if ($this->bans[$ip] <= $now) {
                 unset($this->bans[$ip]);
 
                 return false;

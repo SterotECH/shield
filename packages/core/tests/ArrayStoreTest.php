@@ -13,9 +13,9 @@ it('counts within a fixed window and resets after expiry', function (): void {
     expect($store->increment('a', 10))->toBe(1)
         ->and($store->increment('a', 10))->toBe(2)
         ->and($store->increment('b', 10))->toBe(1);
-    $now = 110;
+    $now = 109;
     expect($store->increment('a', 10))->toBe(3);
-    $now = 111;
+    $now = 110;
     expect($store->increment('a', 10))->toBe(1);
 });
 
@@ -28,9 +28,9 @@ it('expires and removes bans without affecting other clients', function (): void
     expect($store->isBanned('a'))->toBeFalse();
     $store->ban('a', 10);
     $store->ban('b', 20);
-    $now = 110;
+    $now = 109;
     expect($store->isBanned('a'))->toBeTrue();
-    $now = 111;
+    $now = 110;
     expect($store->isBanned('a'))->toBeFalse()
         ->and($store->isBanned('b'))->toBeTrue();
     $store->unban('b');

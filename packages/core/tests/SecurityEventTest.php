@@ -34,3 +34,17 @@ it('uses now when the request has no timestamp and limits evidence', function ()
         ->toBeLessThanOrEqual(time())
         ->and(mb_strlen($event->evidence, 'UTF-8'))->toBe(200);
 });
+
+it('limits serialised evidence without splitting UTF-8 characters', function (string $evidence, string $expected): void {
+    $event = new SecurityEvent(new DateTimeImmutable(), null, null, '203.0.113.9', 'GET', '/.env', 'sensitive-path', Severity::High, true, false, Mode::Detect, 'Probe', $evidence);
+    $actual = $event->toArray()['evidence'];
+
+    expect($actual)->toBe($expected)
+        ->and(mb_strlen($actual, 'UTF-8'))->toBe(200)
+        ->and(mb_check_encoding($actual, 'UTF-8'))->toBeTrue();
+})->with([
+    'exactly 200' => [str_repeat('a', 200), str_repeat('a', 200)],
+    '201 characters' => [str_repeat('a', 201), str_repeat('a', 200)],
+    'accent at boundary' => [str_repeat('a', 199) . 'étail', str_repeat('a', 199) . 'é'],
+    'emoji at boundary' => [str_repeat('a', 199) . '😀tail', str_repeat('a', 199) . '😀'],
+]);

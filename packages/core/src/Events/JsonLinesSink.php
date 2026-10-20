@@ -22,7 +22,11 @@ final class JsonLinesSink implements EventSink
     {
         set_error_handler(static fn(): bool => true);
         try {
-            $line = json_encode($event->toArray(), JSON_THROW_ON_ERROR) . "\n";
+            $json = json_encode($event->toArray(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+            if ($json === false) {
+                return;
+            }
+            $line = $json . "\n";
             $directory = dirname($this->path);
             if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
                 return;

@@ -24,4 +24,9 @@ final class InMemorySink implements EventSink
     {
         return $this->events;
     }
+
+    public function reset(): void
+    {
+        $this->events = [];
+    }
 }
