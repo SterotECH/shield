@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core\Rules;
+namespace Stero\Shield\Rules;
 
 /**
  * Inline:   runs before the app handles the request. Must be very cheap

@@ -59,13 +59,23 @@ runs the `Rule`s for one `Phase`, applies `Mode`, manages bans through a
    asked for. Do not rename rule ids, event keys or corpus fields without
    being told, because the dashboard and corpus depend on them.
 9. Never use em dashes in code comments or docs. Use British spelling.
+10. Use mb_* functions for all string work, always passing 'UTF-8' explicitly (never rely on mb_internal_encoding). Exceptions: byte limits use mb_strcut, never substr, so a multibyte character is not cut in half. Before any matching, check mb_check_encoding($s, 'UTF-8').
 
 ## Workflow
 
+- When asked to commit, load and follow
+  [.agents/skills/commit-gate/SKILL.md](.agents/skills/commit-gate/SKILL.md).
+  Every commit must pass its gates and use Conventional Commits format.
+- Never use Python to edit files. Use patch-based edits instead.
 - Work on one class or one rule at a time. Read its docblock first. The
   docblocks hold the contract and the implementation notes.
 - Test first. Write the unit test from the docblock, watch it fail, then
   implement.
+- Strict TDD is mandatory for every behaviour change: write the test first,
+  run it and verify that it fails for the intended missing behaviour before
+  editing production code. Then implement the smallest correct change and
+  rerun the test to prove it passes. Refactor only while tests remain green.
+  Never write implementation first or claim a red run that was not observed.
 - A new rule is not done until it has at least one attack file in
   `tests/corpus/attacks` and one normal file in `tests/corpus/normal`.
 - Keep changes small. One task, one commit, no drive-by refactors.

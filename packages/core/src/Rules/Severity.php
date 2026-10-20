@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core\Rules;
+namespace Stero\Shield\Rules;
 
 enum Severity: string
 {
@@ -11,9 +11,14 @@ enum Severity: string
     case High = 'high';
     case Critical = 'critical';
 
-    /** TODO: return 1 (Low) to 4 (Critical) using match($this). Used to compare severities. */
+    /** Return 1 (Low) to 4 (Critical). Used to compare severities. */
     public function rank(): int
     {
-        throw new \LogicException('Not implemented');
+        return match ($this) {
+            self::Low => 1,
+            self::Medium => 2,
+            self::High => 3,
+            self::Critical => 4,
+        };
     }
 }

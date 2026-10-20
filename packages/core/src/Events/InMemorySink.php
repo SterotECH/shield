@@ -2,24 +2,26 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core\Events;
+namespace Stero\Shield\Events;
 
 /**
  * Keeps events in an array. Used by tests and the demo.
  *
- * TODO: record() appends to a private list. events() returns the list.
- * Add reset() if the corpus runner needs a clean sink per case.
+ * record() appends to a private list. events() returns the list.
  */
 final class InMemorySink implements EventSink
 {
+    /** @var list<SecurityEvent> */
+    private array $events = [];
+
     public function record(SecurityEvent $event): void
     {
-        throw new \LogicException('Not implemented');
+        $this->events[] = $event;
     }
 
     /** @return list<SecurityEvent> */
     public function events(): array
     {
-        throw new \LogicException('Not implemented');
+        return $this->events;
     }
 }

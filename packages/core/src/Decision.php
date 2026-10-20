@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core;
+namespace Stero\Shield;
+
+use Stero\Shield\Rules\Severity;
 
 /**
  * What the Engine tells the host app. The app only reads this and acts.
@@ -27,8 +29,7 @@ final readonly class Decision
         public ?int $responseStatus = null,
         public ?int $banForSeconds = null,
         public bool $alreadyBanned = false,
-    ) {
-    }
+    ) {}
 
     /** Factory for the common "nothing found" result. */
     public static function allow(): self
@@ -36,15 +37,23 @@ final readonly class Decision
         return new self([], false, false);
     }
 
-    /** TODO: return true when $findings is not empty. */
+    /** Return true when $findings is not empty. */
     public function hasFindings(): bool
     {
-        throw new \LogicException('Not implemented');
+        return $this->findings !== [];
     }
 
-    /** TODO: return the most severe finding's severity, or null if none. Use Severity::rank(). */
+    /** Return the most severe finding's severity, or null if none. */
     public function highestSeverity(): ?Severity
     {
-        throw new \LogicException('Not implemented');
+        $highest = null;
+
+        foreach ($this->findings as $finding) {
+            if ($highest === null || $finding->severity->rank() > $highest->rank()) {
+                $highest = $finding->severity;
+            }
+        }
+
+        return $highest;
     }
 }

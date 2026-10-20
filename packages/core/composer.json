@@ -1,8 +1,11 @@
 {
     "name": "stero/shield",
+    "description": "Framework-agnostic intrusion detection and prevention for PHP applications.",
+    "license": "proprietary",
     "require": {
         "php": "^8.5",
-        "psr/log": "^3"
+        "psr/log": "^3",
+        "ext-mbstring": "*"
     },
     "require-dev": {
         "pestphp/pest": "^5.3",
@@ -16,8 +19,10 @@
     },
     "scripts": {
         "test": "pest",
-        "analyse": "phpstan analyse src --level=max",
-        "lint": "pint"
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "lint": "pint",
+        "lint:check": "pint --test",
+        "check": ["@lint:check", "@analyse", "@test"]
     },
     "authors": [
         {

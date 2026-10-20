@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core;
+namespace Stero\Shield;
 
-use Shield\Core\Rules\Severity;
+use Stero\Shield\Rules\Severity;
 
 /**
  * One thing a rule noticed in one request. Immutable, no behaviour.
@@ -25,6 +25,5 @@ final readonly class Finding
         public string $message,
         public string $evidence = '',
         public bool $banWorthy = false,
-    ) {
-    }
+    ) {}
 }

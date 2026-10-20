@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core\Http;
+namespace Stero\Shield\Http;
 
 /**
  * Builds a NormalizedRequest from plain PHP inputs. Host apps with their own
@@ -39,18 +39,76 @@ final class RequestFactory
         ?string $userId = null,
         int $maxBodyBytes = 16384,
     ): NormalizedRequest {
-        throw new \LogicException('Not implemented');
+        $headers = [];
+        foreach ($server as $key => $value) {
+            if (!is_string($value) || !mb_check_encoding($key, 'UTF-8')) {
+                continue;
+            }
+            if (mb_strpos($key, 'HTTP_', 0, 'UTF-8') === 0) {
+                $name = mb_strtolower(str_replace('_', '-', mb_substr($key, 5, null, 'UTF-8')), 'UTF-8');
+                $headers[$name] = $value;
+            } elseif ($key === 'CONTENT_TYPE' || $key === 'CONTENT_LENGTH') {
+                $headers[mb_strtolower(str_replace('_', '-', $key), 'UTF-8')] = $value;
+            }
+        }
+        $parameters = [];
+        foreach ($query as $key => $value) {
+            if (is_string($value) || is_array($value)) {
+                $parameters[$key] = $value;
+            }
+        }
+        $body = mb_strcut($rawBody, 0, max(0, $maxBodyBytes), 'UTF-8');
+
+        return new NormalizedRequest(
+            is_string($server['REQUEST_METHOD'] ?? null) ? $server['REQUEST_METHOD'] : 'GET',
+            self::normalisePath(is_string($server['REQUEST_URI'] ?? null) ? $server['REQUEST_URI'] : '/'),
+            $parameters,
+            $headers,
+            $body,
+            $body !== $rawBody,
+            self::resolveClientIp($server, $trustedProxies),
+            $tenantId,
+            $userId,
+        );
     }
 
-    /** TODO: see "Path" note above. Pure function, unit test it hard. */
+    /** Decode once, remove the query and collapse duplicate slashes. */
     private static function normalisePath(string $requestUri): string
     {
-        throw new \LogicException('Not implemented');
+        if (!mb_check_encoding($requestUri, 'UTF-8')) {
+            return '/';
+        }
+        $path = rawurldecode(explode('?', $requestUri, 2)[0]);
+        if (!mb_check_encoding($path, 'UTF-8')) {
+            return '/';
+        }
+
+        return preg_replace('~/+~', '/', '/' . $path) ?? '/';
     }
 
-    /** TODO: see "Client IP" note above. Unit test spoofed X-Forwarded-For cases. */
+    /**
+     * Resolve the right-most untrusted address only behind a trusted proxy.
+     *
+     * @param array<string, mixed> $server
+     * @param list<string> $trustedProxies
+     */
     private static function resolveClientIp(array $server, array $trustedProxies): string
     {
-        throw new \LogicException('Not implemented');
+        $remote = is_string($server['REMOTE_ADDR'] ?? null) ? $server['REMOTE_ADDR'] : '';
+        $forwarded = $server['HTTP_X_FORWARDED_FOR'] ?? null;
+        if (!in_array($remote, $trustedProxies, true) || !is_string($forwarded) || !mb_check_encoding($forwarded, 'UTF-8')) {
+            return $remote;
+        }
+        foreach (array_reverse(explode(',', $forwarded)) as $address) {
+            $address = mb_trim($address, null, 'UTF-8');
+            if (filter_var($address, FILTER_VALIDATE_IP) === false) {
+                return $remote;
+            }
+            if (!in_array($address, $trustedProxies, true)) {
+                return $address;
+            }
+        }
+
+        return $remote;
     }
 }

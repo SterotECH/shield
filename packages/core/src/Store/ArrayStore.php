@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core\Store;
+namespace Stero\Shield\Store;
 
 /**
  * In-memory Store for tests and the demo. Lives only for one PHP process.
@@ -17,28 +17,59 @@ namespace Shield\Core\Store;
  */
 final class ArrayStore implements Store
 {
+    /** @var array<string, array{value: int, expiresAt: int}> */
+    private array $counters = [];
+
+    /** @var array<string, int> */
+    private array $bans = [];
+
     /** @param (callable(): int)|null $clock */
-    public function __construct(private mixed $clock = null)
-    {
-    }
+    public function __construct(private readonly mixed $clock = null) {}
 
     public function increment(string $key, int $windowSeconds): int
     {
-        throw new \LogicException('Not implemented');
+        try {
+            $now = $this->clock === null ? time() : ($this->clock)();
+            if (!isset($this->counters[$key]) || $this->counters[$key]['expiresAt'] < $now) {
+                $this->counters[$key] = ['value' => 0, 'expiresAt' => $now + $windowSeconds];
+            }
+
+            return ++$this->counters[$key]['value'];
+        } catch (\Throwable) {
+            return 0;
+        }
     }
 
     public function ban(string $ip, int $seconds): void
     {
-        throw new \LogicException('Not implemented');
+        try {
+            $now = $this->clock === null ? time() : ($this->clock)();
+            $this->bans[$ip] = $now + $seconds;
+        } catch (\Throwable) {
+        }
     }
 
     public function isBanned(string $ip): bool
     {
-        throw new \LogicException('Not implemented');
+        try {
+            $now = $this->clock === null ? time() : ($this->clock)();
+            if (!isset($this->bans[$ip])) {
+                return false;
+            }
+            if ($this->bans[$ip] < $now) {
+                unset($this->bans[$ip]);
+
+                return false;
+            }
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public function unban(string $ip): void
     {
-        throw new \LogicException('Not implemented');
+        unset($this->bans[$ip]);
     }
 }

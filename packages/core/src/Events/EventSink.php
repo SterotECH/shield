@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core\Events;
+namespace Stero\Shield\Events;
 
 /**
  * Where events go. The core never knows or cares whether that is a file,

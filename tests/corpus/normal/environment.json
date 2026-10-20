@@ -1,0 +1,5 @@
+{
+    "description": "Similar-looking words are not whole sensitive segments",
+    "request": {"method": "GET", "path": "/docs/.environment", "query": {}, "headers": {}, "body": "", "ip": "203.0.113.9"},
+    "expect": {"rules": []}
+}

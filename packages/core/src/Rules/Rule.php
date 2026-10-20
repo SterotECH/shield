@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core\Rules;
+namespace Stero\Shield\Rules;
 
-use Shield\Core\Finding;
-use Shield\Core\Http\NormalizedRequest;
+use Stero\Shield\Finding;
+use Stero\Shield\Http\NormalizedRequest;
 
 /**
  * One detection. Rules are small, single purpose and stateless.

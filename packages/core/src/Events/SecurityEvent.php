@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core\Events;
+namespace Stero\Shield\Events;
 
-use Shield\Core\Decision;
-use Shield\Core\Finding;
-use Shield\Core\Http\NormalizedRequest;
-use Shield\Core\Mode;
-use Shield\Core\Rules\Severity;
+use Stero\Shield\Decision;
+use Stero\Shield\Finding;
+use Stero\Shield\Http\NormalizedRequest;
+use Stero\Shield\Mode;
+use Stero\Shield\Rules\Severity;
 
 /**
  * One row of the audit trail: one finding on one request. This is the
@@ -40,11 +40,10 @@ final readonly class SecurityEvent
         public Mode $mode,
         public string $message,
         public string $evidence,
-    ) {
-    }
+    ) {}
 
     /**
-     * TODO: build an event from a request, one of its findings and the final
+     * Build an event from a request, one of its findings and the final
      * decision. occurredAt = request->receivedAt, or now (UTC) when null.
      */
     public static function fromFinding(
@@ -53,12 +52,40 @@ final readonly class SecurityEvent
         Decision $decision,
         Mode $mode,
     ): self {
-        throw new \LogicException('Not implemented');
+        return new self(
+            $request->receivedAt ?? new \DateTimeImmutable('now', new \DateTimeZone('UTC')),
+            $request->tenantId,
+            $request->userId,
+            $request->clientIp,
+            $request->method,
+            $request->path,
+            $finding->ruleId,
+            $finding->severity,
+            $decision->wouldBlock,
+            $decision->blocked,
+            $mode,
+            $finding->message,
+            mb_substr($finding->evidence, 0, 200, 'UTF-8'),
+        );
     }
 
-    /** @return array<string, scalar|null> TODO: see KEYS above. */
+    /** @return array<string, scalar|null> */
     public function toArray(): array
     {
-        throw new \LogicException('Not implemented');
+        return [
+            'ts' => $this->occurredAt->setTimezone(new \DateTimeZone('UTC'))->format(\DateTimeInterface::ATOM),
+            'tenant' => $this->tenantId,
+            'user' => $this->userId,
+            'ip' => $this->ip,
+            'method' => $this->method,
+            'path' => $this->path,
+            'rule' => $this->ruleId,
+            'severity' => $this->severity->value,
+            'would_block' => $this->wouldBlock,
+            'blocked' => $this->blocked,
+            'mode' => $this->mode->value,
+            'message' => $this->message,
+            'evidence' => mb_substr($this->evidence, 0, 200, 'UTF-8'),
+        ];
     }
 }

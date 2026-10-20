@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core\Store;
+namespace Stero\Shield\Store;
 
 /**
  * Short-lived shared state: counters and bans. PHP forgets everything

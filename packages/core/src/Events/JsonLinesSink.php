@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core\Events;
+namespace Stero\Shield\Events;
 
 /**
  * Appends one JSON object per line to a file. Easy to tail, grep, and
@@ -16,12 +16,21 @@ namespace Shield\Core\Events;
  */
 final class JsonLinesSink implements EventSink
 {
-    public function __construct(private string $path)
-    {
-    }
+    public function __construct(private string $path) {}
 
     public function record(SecurityEvent $event): void
     {
-        throw new \LogicException('Not implemented');
+        set_error_handler(static fn(): bool => true);
+        try {
+            $line = json_encode($event->toArray(), JSON_THROW_ON_ERROR) . "\n";
+            $directory = dirname($this->path);
+            if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
+                return;
+            }
+            file_put_contents($this->path, $line, FILE_APPEND | LOCK_EX);
+        } catch (\Throwable) {
+        } finally {
+            restore_error_handler();
+        }
     }
 }

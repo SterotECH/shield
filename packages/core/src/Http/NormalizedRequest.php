@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core\Http;
+namespace Stero\Shield\Http;
 
 /**
  * The only shape of request the engine ever sees. It knows nothing about
@@ -23,8 +23,8 @@ namespace Shield\Core\Http;
 final readonly class NormalizedRequest
 {
     /**
-     * @param array<string, string|array<mixed>> $query
-     * @param array<string, string> $headers
+     * @param  array<string, string|array<mixed>>  $query
+     * @param  array<string, string>  $headers
      */
     public function __construct(
         public string $method,
@@ -37,21 +37,20 @@ final readonly class NormalizedRequest
         public ?string $tenantId = null,
         public ?string $userId = null,
         public ?\DateTimeImmutable $receivedAt = null,
-    ) {
-    }
+    ) {}
 
-    /** TODO: return the header value for a case-insensitive name, or null. */
+    /** Return the header value for a case-insensitive name, or null. */
     public function header(string $name): ?string
     {
-        throw new \LogicException('Not implemented');
+        return $this->headers[mb_strtolower($name, 'UTF-8')] ?? null;
     }
 
     /**
-     * TODO: return all query values flattened into one string
+     * Return all query values flattened into one string
      * ("a=1&b=x"), for rules that scan the whole query for patterns.
      */
     public function queryString(): string
     {
-        throw new \LogicException('Not implemented');
+        return urldecode(http_build_query($this->query, '', '&'));
     }
 }

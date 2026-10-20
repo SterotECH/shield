@@ -1,0 +1,5 @@
+{
+    "description": "Nested mixed-case git directory probe",
+    "request": {"method": "GET", "path": "//app//.GIT/config", "query": {}, "headers": {}, "body": "", "ip": "203.0.113.9"},
+    "expect": {"rules": ["sensitive-path"]}
+}

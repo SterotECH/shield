@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core;
+namespace Stero\Shield;
 
 /**
  * Plain settings for the Engine. No logic here.
@@ -25,6 +25,5 @@ final readonly class EngineConfig
         public int $maxBanSeconds = 604800,
         public array $allowlist = [],
         public int $blockStatus = 404,
-    ) {
-    }
+    ) {}
 }

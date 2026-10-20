@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Core;
+namespace Stero\Shield;
 
 /**
  * Detect: findings are recorded, nothing is ever blocked. Start here.

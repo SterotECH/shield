@@ -1,0 +1,5 @@
+{
+    "description": "Certificate renewal is normal traffic",
+    "request": {"method": "GET", "path": "/.well-known/acme-challenge/test", "query": {}, "headers": {}, "body": "", "ip": "203.0.113.9"},
+    "expect": {"rules": []}
+}
