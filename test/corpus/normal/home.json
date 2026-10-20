@@ -1,0 +1,5 @@
+{
+  "description": "Normal visit to the home page",
+  "request": { "method": "GET", "path": "/", "query": {}, "headers": { "user-agent": "Mozilla/5.0" }, "body": "", "ip": "203.0.113.50" },
+  "expect": { "rules": [] }
+}

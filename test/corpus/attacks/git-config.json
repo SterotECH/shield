@@ -1,0 +1,5 @@
+{
+  "description": "Bot probing for exposed git metadata",
+  "request": { "method": "GET", "path": "/.git/config", "query": {}, "headers": {}, "body": "", "ip": "198.51.100.4" },
+  "expect": { "rules": ["sensitive-path"] }
+}

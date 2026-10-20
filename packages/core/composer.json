@@ -1,0 +1,33 @@
+{
+    "name": "stero/shield",
+    "require": {
+        "php": "^8.5",
+        "psr/log": "^3"
+    },
+    "require-dev": {
+        "pestphp/pest": "^5.3",
+        "phpstan/phpstan": "^2.3",
+        "laravel/pint": "^1.32"
+    },
+    "autoload": {
+        "psr-4": {
+            "Stero\\Shield\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "analyse": "phpstan analyse src --level=max",
+        "lint": "pint"
+    },
+    "authors": [
+        {
+            "name": "Samuel Agyei",
+            "email": "88740526+SterotECH@users.noreply.github.com"
+        }
+    ],
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
