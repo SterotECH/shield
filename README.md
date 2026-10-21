@@ -1,86 +1,221 @@
-# Shield skeleton
+# Shield
 
-Rules for all code: `declare(strict_types=1)`, no framework imports, final
-readonly value objects, and nothing in the inline path may throw (fail open).
+Shield is a framework-agnostic intrusion detection and prevention layer for PHP
+web apps. It inspects normalised requests, records security findings and can
+block requests and temporarily ban clients when enforcement is enabled.
 
-## Implement in this order
-1. Severity::rank, Decision helpers, NormalizedRequest helpers
-2. ArrayStore, InMemorySink, JsonLinesSink
-3. RequestFactory (path and client IP are security critical, test hard)
-4. SensitivePathRule
-5. Engine (follow the numbered notes in the class)
-6. CorpusTest, then demo/index.php
-Each step is done when its unit tests pass and PHPStan (max) is clean.
+## Status
 
-## Later, not in this skeleton
-LoginRateRule (needs Store), RedisStore, the 15-line middleware inside
-EduConect that builds a NormalizedRequest and calls Engine::inspect twice.
+Pre-1.0. Detect-only by default. The API may change. Shield has not been
+independently audited. Use at your own risk.
+
+## Install
+
+Requires PHP 8.5 or later and ext-mbstring. Redis storage also needs ext-redis.
+
+```sh
+composer require stero/shield
+```
+
+This command requires a release available through Packagist. Until then, add
+the Git repository to your application's Composer configuration and use the
+development branch:
+
+```sh
+composer config repositories.shield vcs https://github.com/sterotech/shield
+composer require 'stero/shield:dev-main'
+```
+
+The package includes the core engine and Redis store. There is no framework
+service provider or automatic middleware registration. Your application calls
+the engine explicitly. The CLI viewer is used from a repository clone; see
+"View events" below.
+
+## How it works
+
+1. RequestFactory builds a NormalizedRequest from inputs supplied by the host.
+2. Engine runs rules and records their findings through an event sink.
+3. Phase selects Inline before the app or Deferred after sending the response.
+4. Mode selects detection or enforcement; detection never blocks.
+5. Decision tells the host what would block and whether it should block now.
+
+## Use in a plain PHP application
+
+After installing the package in your application's root, create `public/` and
+save this as `public/index.php`. It follows the flow in
+`packages/core/demo/index.php`. The example records events to a file outside
+the public directory and uses an in-memory store for a first local run.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Stero\Shield\Engine;
+use Stero\Shield\EngineConfig;
+use Stero\Shield\Events\JsonLinesSink;
+use Stero\Shield\Http\RequestFactory;
+use Stero\Shield\Rules\Phase;
+use Stero\Shield\Rules\SensitivePathRule;
+use Stero\Shield\Store\ArrayStore;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$request = RequestFactory::fromGlobals($_SERVER, $_GET, '');
+$store = new ArrayStore();
+$sink = new JsonLinesSink(dirname(__DIR__) . '/var/shield/events.jsonl');
+$engine = new Engine(
+    [new SensitivePathRule()],
+    $store,
+    $sink,
+    new EngineConfig(),
+);
+
+$decision = $engine->inspect($request, Phase::Inline);
+if ($decision->blocked) {
+    http_response_code($decision->responseStatus ?? 404);
+    echo 'Not Found';
+    exit;
+}
+
+// Replace this response with your application's request handler.
+header('X-Shield-Would-Block: ' . ($decision->wouldBlock ? '1' : '0'));
+echo 'hello';
+if (function_exists('fastcgi_finish_request')) {
+    fastcgi_finish_request();
+}
+$engine->inspect($request, Phase::Deferred);
+```
+
+Run the example from your application's root:
+
+```sh
+php -S 127.0.0.1:8080 -t public public/index.php
+```
+
+In another terminal:
+
+```sh
+curl -i http://127.0.0.1:8080/hello
+curl -i http://127.0.0.1:8080/.env
+cat var/shield/events.jsonl
+```
+
+Both requests return `200` and `hello` in detection mode. `/hello` has
+`X-Shield-Would-Block: 0`; `/.env` has `X-Shield-Would-Block: 1` and records a
+`sensitive-path` event. These are example headers set by your app, not headers
+the engine sends itself. The development server is for local use only.
+
+`SensitivePathRule` is an Inline rule for known probe paths, including `/.env`,
+`/.git` and WordPress login paths. It ignores `/.well-known/`. Rules are opt-in:
+constructing an Engine does not register rules automatically.
+
+The empty body argument is intentional: this rule only needs the path. Keep
+request-body handling in your application. Pass raw request inputs to
+RequestFactory; do not decode the path first. If you use a reverse proxy,
+pass its exact IP addresses as `trustedProxies`. Forwarded client IPs are
+ignored unless the direct peer is trusted.
+
+Run Inline before your application handler. Run Deferred through your host's
+after-response or termination hook. The example calls `fastcgi_finish_request`
+where available; PHP's development server has no equivalent, so its Deferred
+call runs after generating the output. Never send a second response from
+Deferred.
+
+## Enable enforcement
+
+Review recorded events in detection mode first. To enforce the rules supplied
+to an engine, import `Stero\Shield\Mode` and replace `new EngineConfig()` with:
+
+```php
+new EngineConfig(mode: Mode::Enforce)
+```
+
+The host must honour `$decision->blocked` and return
+`$decision->responseStatus`, normally `404`, before running its handler.
+`wouldBlock` is also set in detection mode; it is not an instruction to block.
+`findings` contains the rule results. `banForSeconds` reports a newly written
+ban; `alreadyBanned` reports an existing ban.
+
+Only ban-worthy findings create bans. The default initial ban is one day;
+repeat offences double it up to seven days. Allowlisted IPs, invalid IPs and
+`0.0.0.0` are never banned or blocked. An allowlist can be passed as exact IPs
+or CIDRs through `EngineConfig(allowlist: [...])`.
+
+`ArrayStore` and `InMemorySink` keep data only in their own instances. In a
+normal PHP request lifecycle they do not preserve bans, counters or events
+between requests. Use Redis for persistent bans and counters, and a durable
+sink such as JsonLinesSink for events.
+
+## Persist bans and counters with Redis
+
+Install ext-redis and provide a reachable Redis server. In the PHP example,
+add these imports and replace `$store = new ArrayStore();` with the following:
+
+```php
+use Stero\Shield\Redis\NullStore;
+use Stero\Shield\Redis\PhpRedisClient;
+use Stero\Shield\Redis\RedisConnector;
+use Stero\Shield\Redis\RedisStore;
+
+$connection = RedisConnector::connect(
+    getenv('REDIS_HOST') ?: '127.0.0.1',
+    (int) (getenv('REDIS_PORT') ?: 6379),
+    getenv('REDIS_PASSWORD') ?: null,
+);
+$store = $connection === null
+    ? new NullStore()
+    : new RedisStore(new PhpRedisClient($connection), 'my-app:shield:');
+```
+
+Use a different prefix for each application and create a fresh RedisStore for
+each request, including in long-running workers. Connection and read timeouts
+default to 100 ms. Connection failure returns null; NullStore keeps the app
+running without stored bans or counters. RedisStore stops attempting Redis
+operations for the rest of a request after an operation fails. A failed ban
+write does not undo an enforcement decision for the current request.
+
+Keep event files outside the public directory, grant the PHP process write
+access and arrange log rotation. Shield does not rotate files. Rules, stores
+and sinks are designed to fail open, so check that events are actually being
+written before relying on them.
+
+## View events
+
+The CLI is separate from the installed library. From a repository clone:
+
+```sh
+cd packages/cli
+composer install
+bin/shield events --file=/absolute/path/to/your-app/var/shield/events.jsonl
+bin/shield stats --file=/absolute/path/to/your-app/var/shield/events.jsonl --since=24h
+bin/shield tail --file=/absolute/path/to/your-app/var/shield/events.jsonl
+```
+
+Use `--severity=high` or `--would-block` with `events` to narrow the results.
+Set `SHIELD_EVENTS` instead of repeating `--file`. Stop `tail` with Ctrl-C.
 
 ## Run the demo
 
-From `packages/core`, install development dependencies with `composer install`,
-then start the demo:
+From a repository clone:
 
 ```sh
+cd packages/core
+composer install
 SHIELD_DEMO=1 composer demo
-curl -i localhost:8080/hello
-curl -i localhost:8080/.env
-curl localhost:8080/__events
 ```
 
-The first request returns 200 and `X-Shield-Would-Block: 0`; the second returns
-200 and `X-Shield-Would-Block: 1`. Both say `hello`. On fresh state, events
-shows one `sensitive-path` event. State persists in `demo/.state/`.
+Visit `http://localhost:8080/.env`. Detection returns `hello`; events are
+written to `packages/core/demo/.state/events.jsonl`. Restart with
+`SHIELD_DEMO=1 SHIELD_MODE=enforce composer demo` to try enforcement locally.
 
-Stop the server with Ctrl-C, then restart in enforcement mode:
+## Run the tests
 
-```sh
-SHIELD_DEMO=1 SHIELD_MODE=enforce composer demo
-curl -i localhost:8080/.env
-curl -i localhost:8080/hello
-curl localhost:8080/__reset
-curl -i localhost:8080/hello
-```
+Run `composer install` and `composer check` in each of `packages/core`,
+`packages/redis` and `packages/cli`. Core tests include the attack and normal
+request corpus. Redis integration tests require `SHIELD_TEST_REDIS=host:port`;
+otherwise they skip. From the repository root, run `sh tests/install/check.sh`
+to test installation through Composer.
 
-The probe returns 404 with `Not Found` and bans the IP. The next `/hello`
-also returns 404. Reset prints `reset`; `/hello` then returns 200 again.
-Reset clears bans and counters, preserving event history. Helper routes are
-enabled only with `SHIELD_DEMO=1`. This local demo store is not for production;
-use Redis there.
-
-## Redis store
-
-Install `packages/redis` with Composer (PHP 8.5, ext-mbstring and ext-redis).
-Use `Stero\Shield\Redis\RedisConnector::connect($host, $port, $password)`;
-it returns a native Redis connection or null with 100 ms connection and read
-timeouts by default. Wrap a connection in `PhpRedisClient`, then `RedisStore`;
-use `NullStore` when the connection is null. All three classes share the
-`Stero\Shield\Redis` namespace. Create a fresh store for each request: after
-one failure it skips all later operations on that instance. Counters use
-fixed windows and bans always expire. Pass a distinct prefix per application.
-
-Run `composer check` in `packages/redis`. Integration tests skip unless
-`SHIELD_TEST_REDIS=host:port` is set. With Lerd Redis running, use
-`lerd-redis:6379` inside the PHP container and pass the variable into that
-container. Alternatively, `docker compose up -d` in `packages/redis` starts
-Redis 7 on host port 6380. Tests clean up only their random prefixes via SCAN.
-
-## Viewing events
-
-Install the independent viewer from `packages/cli` with `composer install`
-(PHP 8.5 or later), then run:
-
-```sh
-bin/shield events --file=../core/demo/.state/events.jsonl --severity=high --limit=20
-bin/shield stats --file=../core/demo/.state/events.jsonl --since=24h
-bin/shield tail --file=../core/demo/.state/events.jsonl --lines=20
-```
-
-Set `SHIELD_EVENTS` instead of passing `--file`; the default is `./events.jsonl`.
-Events also supports `--rule`, `--ip`, `--tenant`, `--would-block` and `--since`
-(`15m`, `2h`, `1d` or an ISO 8601 timestamp). `--json` emits matching raw JSON
-lines for piping; skipped-line notices go to stderr. Stop tail with Ctrl-C.
-Use `--theme=auto|light|dark|plain` or `SHIELD_THEME`; the option wins. Auto
-reads `COLORFGBG` without querying the terminal. Badge pairs keep the same
-contrast on every theme, while other text uses terminal defaults. `--no-ansi`,
-`NO_COLOR`, plain theme and piped output disable styling.
+See [SECURITY.md](SECURITY.md) for vulnerability reporting and [LICENSE](LICENSE)
+for the MIT licence.

@@ -1,0 +1,22 @@
+{
+    "name": "stero/shield",
+    "description": "Framework-agnostic intrusion detection and prevention layer for PHP web apps.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["security", "ids", "ips", "waf", "middleware", "php"],
+    "homepage": "https://github.com/sterotech/shield",
+    "support": {
+        "issues": "https://github.com/sterotech/shield/issues",
+        "source": "https://github.com/sterotech/shield"
+    },
+    "authors": [{"name": "Stero Tech Inc."}],
+    "require": {"ext-mbstring": "*", "php": "^8.5"},
+    "suggest": {"ext-redis": "Required for the Redis store"},
+    "autoload": {
+        "psr-4": {
+            "Stero\\Shield\\": "packages/core/src/",
+            "Stero\\Shield\\Redis\\": "packages/redis/src/"
+        }
+    },
+    "config": {"sort-packages": true}
+}

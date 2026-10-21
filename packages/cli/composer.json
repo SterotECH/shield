@@ -1,7 +1,7 @@
 {
     "name": "stero/shield-cli",
     "description": "Terminal viewer for Shield JSON Lines security events.",
-    "license": "proprietary",
+    "license": "MIT",
     "require": {
         "php": "^8.5",
         "ext-mbstring": "*",

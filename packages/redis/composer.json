@@ -1,7 +1,7 @@
 {
     "name": "stero/shield-redis",
     "description": "Fail-open Redis storage for Shield.",
-    "license": "proprietary",
+    "license": "MIT",
     "require": {"php": "^8.5", "ext-mbstring": "*", "ext-redis": "*", "stero/shield": "dev-main"},
     "repositories": [{"type": "path", "url": "../core"}],
     "require-dev": {"pestphp/pest": "^5.3", "phpstan/phpstan": "^2.3", "laravel/pint": "^1.32"},

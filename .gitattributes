@@ -1,0 +1,9 @@
+/packages/cli export-ignore
+/tests export-ignore
+/demo export-ignore
+/packages/core/tests export-ignore
+/packages/core/demo export-ignore
+/packages/redis/tests export-ignore
+/CLAUDE.md export-ignore
+/AGENTS.md export-ignore
+/.github export-ignore
