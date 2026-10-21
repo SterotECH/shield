@@ -1,0 +1,26 @@
+{
+    "name": "stero/shield-cli",
+    "description": "Terminal viewer for Shield JSON Lines security events.",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.5",
+        "ext-mbstring": "*",
+        "symfony/console": "^7.4",
+        "nunomaduro/termwind": "^2.3"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.8",
+        "phpstan/phpstan": "^2.3",
+        "laravel/pint": "^1.32"
+    },
+    "autoload": {"psr-4": {"Stero\\Shield\\CLI\\": "src/"}},
+    "bin": ["bin/shield"],
+    "scripts": {
+        "test": "pest",
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "lint": "pint",
+        "lint:check": "pint --test",
+        "check": ["@lint:check", "@analyse", "@test"]
+    },
+    "config": {"platform": {"php": "8.5.0"}, "allow-plugins": {"pestphp/pest-plugin": true}}
+}

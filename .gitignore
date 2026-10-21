@@ -1,2 +1,6 @@
 packages/core/demo/.state/
 packages/core/demo/events.jsonl
+packages/cli/vendor/
+packages/cli/.phpstan-cache/
+packages/cli/.phpunit.cache/
+packages/cli/.pest/

@@ -47,3 +47,23 @@ also returns 404. Reset prints `reset`; `/hello` then returns 200 again.
 Reset clears bans and counters, preserving event history. Helper routes are
 enabled only with `SHIELD_DEMO=1`. This local demo store is not for production;
 use Redis there.
+
+## Viewing events
+
+Install the independent viewer from `packages/cli` with `composer install`
+(PHP 8.5 or later), then run:
+
+```sh
+bin/shield events --file=../core/demo/.state/events.jsonl --severity=high --limit=20
+bin/shield stats --file=../core/demo/.state/events.jsonl --since=24h
+bin/shield tail --file=../core/demo/.state/events.jsonl --lines=20
+```
+
+Set `SHIELD_EVENTS` instead of passing `--file`; the default is `./events.jsonl`.
+Events also supports `--rule`, `--ip`, `--tenant`, `--would-block` and `--since`
+(`15m`, `2h`, `1d` or an ISO 8601 timestamp). `--json` emits matching raw JSON
+lines for piping; skipped-line notices go to stderr. Stop tail with Ctrl-C.
+Use `--theme=auto|light|dark|plain` or `SHIELD_THEME`; the option wins. Auto
+reads `COLORFGBG` without querying the terminal. Badge pairs keep the same
+contrast on every theme, while other text uses terminal defaults. `--no-ansi`,
+`NO_COLOR`, plain theme and piped output disable styling.
