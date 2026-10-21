@@ -60,6 +60,17 @@ runs the `Rule`s for one `Phase`, applies `Mode`, manages bans through a
    being told, because the dashboard and corpus depend on them.
 9. Never use em dashes in code comments or docs. Use British spelling.
 10. Use mb_* functions for all string work, always passing 'UTF-8' explicitly (never rely on mb_internal_encoding). Exceptions: byte limits use mb_strcut, never substr, so a multibyte character is not cut in half. Before any matching, check mb_check_encoding($s, 'UTF-8').
+11. The client IP 0.0.0.0, invalid IPs and allowlisted IPs are never banned or blocked.
+12. Use the shared IpMatcher for every IP or CIDR comparison. Do not write a second one.
+13. packages/cli is the only package allowed dependencies (symfony/console,
+    nunomaduro/termwind). It reads events.jsonl and never imports core
+    classes. The event keys in SecurityEvent::toArray() are its contract.
+14. Every string that came from a request (path, evidence, message, tenant,
+    user, ip) is untrusted. Strip control characters and escape markup
+    before it reaches the terminal.
+15. packages/redis may depend on ext-redis and on the core's Store
+       interface only. It never imports Laravel or any other framework.
+       Every Redis failure fails open.
 
 ## Workflow
 
@@ -107,6 +118,36 @@ assumption you made.
 Later, only when asked: `LoginRateRule`, `RedisStore`, then the host app
 middleware that calls `Engine::inspect()` twice (Inline before the app,
 Deferred after the response is sent).
+
+## Self-review (mandatory at the end of every task)
+
+After composer check passes and before you report, act as a hostile
+reviewer of your own work, not as its author. If you find a problem, fix
+it, then say what you fixed. Do not hide it.
+[test](test)
+1. Scope. Run git status and git diff --stat. List every changed file.
+   A file outside the task's allowed list must be reverted or justified.
+2. Spec trace. Go through the task prompt line by line. For every
+   requirement give: the requirement, the test that proves it, and a
+   status (done, partial, missing). Skip nothing.
+3. Mutation checks. For the 3 to 5 most critical behaviours of the task
+   (the prompt may name them), deliberately break the implementation,
+   one change at a time, and run the relevant test. It must FAIL.
+   Then restore the code and confirm with git diff that it is restored.
+   If no test fails, the test is weak: strengthen it and repeat.
+4. Static checks. Grep and report: no "Not implemented" or TODO left for
+   this task; no urldecode; no $_SERVER, $_GET or php://input inside
+   src; no framework imports in src; Mode referenced only in Engine,
+   EngineConfig and SecurityEvent; no new composer dependencies; no em
+   dashes.
+5. Test quality. List any test that has no behavioural assertion, uses a
+   lookalike string where real bad bytes are needed, or would still pass
+   with the implementation deleted.
+6. Report format: (a) changed files, (b) spec trace table, (c) mutation
+   table with the change made and the test that failed, (d) static check
+   results, (e) assumptions, (f) anything you are unsure about or could
+   not verify. Run composer check one final time AFTER the mutations are
+   restored and paste its summary line.
 
 ## Glossary
 

@@ -1,0 +1,14 @@
+{
+    "description": "security txt",
+    "request": {
+        "method": "GET",
+        "path": "/.well-known/security.txt",
+        "query": {},
+        "headers": {},
+        "body": "",
+        "ip": "203.0.113.9"
+    },
+    "expect": {
+        "rules": []
+    }
+}

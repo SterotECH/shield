@@ -1,0 +1,14 @@
+{
+    "description": "Encoded parent segment before an environment file probe",
+    "request": {
+        "method": "GET",
+        "path": "/%2e%2e/.env",
+        "query": {},
+        "headers": {},
+        "body": "",
+        "ip": "203.0.113.9"
+    },
+    "expect": {
+        "rules": ["sensitive-path"]
+    }
+}

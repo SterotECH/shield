@@ -1,0 +1,14 @@
+{
+    "description": "environment page",
+    "request": {
+        "method": "GET",
+        "path": "/environment",
+        "query": {},
+        "headers": {},
+        "body": "",
+        "ip": "203.0.113.9"
+    },
+    "expect": {
+        "rules": []
+    }
+}

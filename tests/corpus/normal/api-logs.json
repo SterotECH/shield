@@ -1,0 +1,14 @@
+{
+    "description": "api logs",
+    "request": {
+        "method": "GET",
+        "path": "/api/logs",
+        "query": {},
+        "headers": {},
+        "body": "",
+        "ip": "203.0.113.9"
+    },
+    "expect": {
+        "rules": []
+    }
+}

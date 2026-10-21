@@ -35,6 +35,20 @@ it('uses now when the request has no timestamp and limits evidence', function ()
         ->and(mb_strlen($event->evidence, 'UTF-8'))->toBe(200);
 });
 
+it('copies all fromFinding fields and uses UTC for a missing timestamp', function (): void {
+    $request = new NormalizedRequest('POST', '/probe', [], [], '', false, '2001:db8::1', 'tenant', 'user');
+    $finding = new Finding('rule', Severity::Medium, 'Message', 'Evidence', true);
+    $before = time();
+    $event = SecurityEvent::fromFinding($request, $finding, new Decision([$finding], true, true, 410), Mode::Enforce);
+    expect($event->occurredAt->getTimezone()->getName())->toBe('UTC')
+        ->and(abs($event->occurredAt->getTimestamp() - $before))->toBeLessThanOrEqual(2)
+        ->and($event->tenantId)->toBe('tenant')->and($event->userId)->toBe('user')
+        ->and($event->ip)->toBe('2001:db8::1')->and($event->method)->toBe('POST')->and($event->path)->toBe('/probe')
+        ->and($event->ruleId)->toBe('rule')->and($event->severity)->toBe(Severity::Medium)
+        ->and($event->message)->toBe('Message')->and($event->evidence)->toBe('Evidence')
+        ->and($event->wouldBlock)->toBeTrue()->and($event->blocked)->toBeTrue()->and($event->mode)->toBe(Mode::Enforce);
+});
+
 it('limits serialised evidence without splitting UTF-8 characters', function (string $evidence, string $expected): void {
     $event = new SecurityEvent(new DateTimeImmutable(), null, null, '203.0.113.9', 'GET', '/.env', 'sensitive-path', Severity::High, true, false, Mode::Detect, 'Probe', $evidence);
     $actual = $event->toArray()['evidence'];

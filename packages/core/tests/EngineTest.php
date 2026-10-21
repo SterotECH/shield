@@ -2,186 +2,201 @@
 
 declare(strict_types=1);
 
+use ShieldTests\FakeRule;
+use ShieldTests\ThrowingRule;
+use ShieldTests\ThrowingSink;
+use ShieldTests\ThrowingStore;
 use Stero\Shield\Engine;
 use Stero\Shield\EngineConfig;
-use Stero\Shield\Events\EventSink;
 use Stero\Shield\Events\InMemorySink;
-use Stero\Shield\Events\SecurityEvent;
 use Stero\Shield\Finding;
 use Stero\Shield\Http\NormalizedRequest;
 use Stero\Shield\Mode;
 use Stero\Shield\Rules\Phase;
-use Stero\Shield\Rules\Rule;
-use Stero\Shield\Rules\SensitivePathRule;
 use Stero\Shield\Rules\Severity;
 use Stero\Shield\Store\ArrayStore;
-use Stero\Shield\Store\Store;
 
-function engineTestRequest(string $ip = '203.0.113.9'): NormalizedRequest
+require_once __DIR__ . '/EngineHelpers.php';
+
+function engineTestRequest(string $ip = '203.0.113.9', string $path = '/.env'): NormalizedRequest
 {
-    return new NormalizedRequest('GET', '/.env', [], [], '', false, $ip);
+    return new NormalizedRequest('GET', $path, [], [], '', false, $ip);
 }
 
-function engineTestRule(?Finding $finding, Phase $phase = Phase::Inline, bool $throws = false): Rule
+function engineFinding(bool $banWorthy = true, string $id = 'probe'): Finding
 {
-    return new class ($finding, $phase, $throws) implements Rule {
-        public int $calls = 0;
-        public function __construct(private ?Finding $finding, private Phase $phase, private bool $throws) {}
-        public function id(): string
-        {
-            return 'test';
-        }
-        public function phase(): Phase
-        {
-            return $this->phase;
-        }
-        public function inspect(NormalizedRequest $request): ?Finding
-        {
-            $this->calls++;
-            if ($this->throws) {
-                throw new RuntimeException('rule failed');
-            }
-            return $this->finding;
-        }
-    };
+    return new Finding($id, Severity::High, 'Probe', '/.env', $banWorthy);
 }
 
-it('records detection without banning or blocking', function (): void {
-    $store = new ArrayStore();
-    $sink = new InMemorySink();
-    $engine = new Engine([new SensitivePathRule()], $store, $sink, new EngineConfig());
-    $decision = $engine->inspect(engineTestRequest(), Phase::Inline);
-
-    expect($decision->wouldBlock)->toBeTrue()
-        ->and($decision->blocked)->toBeFalse()
-        ->and($decision->responseStatus)->toBeNull()
-        ->and($store->isBanned('203.0.113.9'))->toBeFalse()
-        ->and($sink->events())->toHaveCount(1)
-        ->and($sink->events()[0]->mode)->toBe(Mode::Detect)
-        ->and($sink->events()[0]->wouldBlock)->toBeTrue();
+beforeEach(function (): void {
+    $this->now = 100;
+    $this->store = new ArrayStore(fn(): int => $this->now);
+    $this->sink = new InMemorySink();
 });
 
-it('enforces expiring escalating bans capped at the configured maximum', function (): void {
-    $now = 100;
-    $store = new ArrayStore(function () use (&$now): int {
-        return $now;
-    });
-    $sink = new InMemorySink();
-    $engine = new Engine([new SensitivePathRule()], $store, $sink, new EngineConfig(Mode::Enforce, 10, 25));
-    foreach ([10, 20, 25, 25] as $duration) {
-        $decision = $engine->inspect(engineTestRequest(), Phase::Inline);
-        expect($decision->blocked)->toBeTrue()
-            ->and($decision->wouldBlock)->toBeTrue()
-            ->and($decision->responseStatus)->toBe(404)
-            ->and($decision->banForSeconds)->toBe($duration);
-        $banned = $engine->inspect(engineTestRequest(), Phase::Inline);
-        expect($banned->alreadyBanned)->toBeTrue()
-            ->and($banned->blocked)->toBeTrue()
-            ->and($banned->banForSeconds)->toBeNull();
-        $now += $duration + 1;
+it('allows requests with no rules or events', function (): void {
+    $decision = (new Engine([], $this->store, $this->sink, new EngineConfig()))->inspect(engineTestRequest(), Phase::Inline);
+    expect($decision->findings)->toBe([])->and($decision->wouldBlock)->toBeFalse()
+        ->and($decision->blocked)->toBeFalse()->and($this->sink->events())->toBe([]);
+});
+
+it('records honest decisions in both modes and phases', function (Mode $mode, Phase $phase, bool $worthy): void {
+    $finding = engineFinding($worthy);
+    $store = new ThrowingStore(inner: $this->store);
+    $decision = (new Engine([new FakeRule($finding, $phase)], $store, $this->sink, new EngineConfig($mode, 60, 120, blockStatus: 410)))
+        ->inspect(engineTestRequest(), $phase);
+    $bans = $mode === Mode::Enforce && $worthy;
+    $blocks = $bans && $phase === Phase::Inline;
+    expect($decision->findings)->toBe([$finding])->and($decision->wouldBlock)->toBe($worthy)
+        ->and($decision->blocked)->toBe($blocks)->and($decision->responseStatus)->toBe($blocks ? 410 : null)
+        ->and($decision->banForSeconds)->toBe($bans ? 60 : null)
+        ->and($this->store->isBanned('203.0.113.9'))->toBe($bans)
+        ->and($this->sink->events())->toHaveCount(1);
+    $event = $this->sink->events()[0]->toArray();
+    expect($event['would_block'])->toBe($worthy)->and($event['blocked'])->toBe($blocks)->and($event['mode'])->toBe($mode->value);
+    if (!$bans) {
+        expect($store->calls)->not->toContain('ban', 'increment');
+    } else {
+        $this->now += 60;
+        expect($this->store->isBanned('203.0.113.9'))->toBeFalse();
     }
-    expect($sink->events())->toHaveCount(8)
-        ->and($sink->events()[1]->ruleId)->toBe('banned-ip');
-    $now += 30 * 86400 + 1;
-    expect($engine->inspect(engineTestRequest(), Phase::Inline)->banForSeconds)->toBe(10);
+})->with([Mode::Detect, Mode::Enforce])->with([Phase::Inline, Phase::Deferred])->with([true, false]);
+
+it('short circuits existing inline bans without extending expiry', function (Mode $mode): void {
+    $this->store->ban('203.0.113.9', 60);
+    $this->now += 20;
+    $rule = new FakeRule(engineFinding());
+    $path = '/' . str_repeat('é', 220);
+    $decision = (new Engine([$rule], $this->store, $this->sink, new EngineConfig(mode: $mode, blockStatus: 410)))
+        ->inspect(engineTestRequest(path: $path), Phase::Inline);
+    expect($decision->alreadyBanned)->toBeTrue()->and($decision->wouldBlock)->toBeTrue()
+        ->and($decision->blocked)->toBe($mode === Mode::Enforce)
+        ->and($decision->responseStatus)->toBe($mode === Mode::Enforce ? 410 : null)
+        ->and($decision->banForSeconds)->toBeNull()->and($rule->calls)->toBe(0)
+        ->and($decision->findings)->toHaveCount(1)->and($this->sink->events())->toHaveCount(1);
+    $finding = $decision->findings[0];
+    expect($finding->ruleId)->toBe('banned-ip')->and($finding->severity)->toBe(Severity::High)
+        ->and($finding->message)->toBe('Request from a banned IP')->and($finding->banWorthy)->toBeFalse()
+        ->and($finding->evidence)->toBe(mb_substr($path, 0, 200, 'UTF-8'))
+        ->and($this->sink->events()[0]->ruleId)->toBe('banned-ip');
+    $this->now = 160;
+    expect($this->store->isBanned('203.0.113.9'))->toBeFalse();
+})->with([Mode::Detect, Mode::Enforce]);
+
+it('filters phases and never checks deferred bans', function (): void {
+    $this->store->ban('203.0.113.9', 60);
+    $store = new ThrowingStore('isBanned', inner: $this->store);
+    $inline = new FakeRule(engineFinding());
+    $deferred = new FakeRule(engineFinding(false), Phase::Deferred);
+    $engine = new Engine([$inline, $deferred], $store, $this->sink, new EngineConfig());
+    $decision = $engine->inspect(engineTestRequest(), Phase::Deferred);
+    expect($decision->alreadyBanned)->toBeFalse()->and($decision->findings)->toHaveCount(1)
+        ->and($inline->calls)->toBe(0)->and($deferred->calls)->toBe(1)->and($store->calls)->toBe([]);
+    $engine->inspect(engineTestRequest(), Phase::Inline);
+    expect($inline->calls)->toBe(1)->and($deferred->calls)->toBe(1);
 });
 
-it('never blocks allowlisted clients but still records findings', function (string $ip, string $entry): void {
-    $store = new ArrayStore();
-    $store->ban($ip, 100);
-    $sink = new InMemorySink();
-    $engine = new Engine([new SensitivePathRule()], $store, $sink, new EngineConfig(mode: Mode::Enforce, allowlist: [$entry]));
-    $decision = $engine->inspect(engineTestRequest($ip), Phase::Inline);
+it('short circuits only worthy inline findings and preserves event order', function (Phase $phase, bool $firstWorthy): void {
+    $first = new FakeRule(engineFinding($firstWorthy, 'first'), $phase);
+    $second = new FakeRule(engineFinding(true, 'second'), $phase);
+    $decision = (new Engine([$first, $second], $this->store, $this->sink, new EngineConfig()))->inspect(engineTestRequest(), $phase);
+    $stops = $phase === Phase::Inline && $firstWorthy;
+    expect($first->calls)->toBe(1)->and($second->calls)->toBe($stops ? 0 : 1)
+        ->and(array_map(fn($event) => $event->ruleId, $this->sink->events()))->toBe($stops ? ['first'] : ['first', 'second'])
+        ->and($decision->findings)->toHaveCount($stops ? 1 : 2);
+})->with([Phase::Inline, Phase::Deferred])->with([true, false]);
 
-    expect($decision->blocked)->toBeFalse()
-        ->and($decision->wouldBlock)->toBeTrue()
-        ->and($decision->alreadyBanned)->toBeFalse()
-        ->and($decision->banForSeconds)->toBeNull()
-        ->and($sink->events())->toHaveCount(1);
+it('escalates safely and resets the fixed 30 day window', function (): void {
+    $engine = new Engine([new FakeRule(engineFinding())], $this->store, $this->sink, new EngineConfig(Mode::Enforce, maxBanSeconds: 604800));
+    foreach ([86400, 172800, 345600, 604800, 604800] as $seconds) {
+        expect($engine->inspect(engineTestRequest(), Phase::Inline)->banForSeconds)->toBe($seconds);
+        $this->store->unban('203.0.113.9');
+        $this->now++;
+    }
+    $this->now = 100 + 30 * 86400;
+    expect($engine->inspect(engineTestRequest(), Phase::Inline)->banForSeconds)->toBe(86400);
+});
+
+it('handles failed counters and huge counts without overflow', function (int $count, int $expected): void {
+    $store = new ThrowingStore(count: $count);
+    $decision = (new Engine([new FakeRule(engineFinding())], $store, $this->sink, new EngineConfig(Mode::Enforce, 86400, PHP_INT_MAX)))
+        ->inspect(engineTestRequest(), Phase::Inline);
+    expect($decision->banForSeconds)->toBe($expected)->and($decision->blocked)->toBeTrue();
+})->with([[0, 86400], [-1, 86400], [100, PHP_INT_MAX], [PHP_INT_MAX, PHP_INT_MAX]]);
+
+it('caps the ban at the configured maximum on offence 100', function (): void {
+    $decision = (new Engine([new FakeRule(engineFinding())], new ThrowingStore(count: 100), $this->sink, new EngineConfig(Mode::Enforce, 86400, 604800)))
+        ->inspect(engineTestRequest(), Phase::Inline);
+    expect($decision->banForSeconds)->toBeInt()->toBe(604800);
+});
+
+it('never checks or mutates bans for unbannable clients', function (string $ip, array $allowlist): void {
+    $this->store->ban($ip, 60);
+    $store = new ThrowingStore('isBanned', inner: $this->store);
+    $decision = (new Engine([new FakeRule(engineFinding())], $store, $this->sink, new EngineConfig(mode: Mode::Enforce, allowlist: $allowlist)))
+        ->inspect(engineTestRequest($ip), Phase::Inline);
+    expect($decision->wouldBlock)->toBeTrue()->and($decision->blocked)->toBeFalse()->and($decision->responseStatus)->toBeNull()
+        ->and($decision->alreadyBanned)->toBeFalse()->and($decision->banForSeconds)->toBeNull()
+        ->and($this->sink->events())->toHaveCount(1)->and($store->calls)->toBe([]);
 })->with([
-    ['192.0.2.10', '192.0.2.10'], ['192.0.2.10', '192.0.2.0/24'],
-    ['2001:db8::123', '2001:db8::/32'], ['2001:db8::1', '2001:0db8:0:0:0:0:0:1'],
-    ['192.0.2.10', '0.0.0.0/0'], ['2001:db8::1', '::/0'],
+    ['192.0.2.10', ['192.0.2.10']], ['192.0.2.10', ['192.0.2.0/24']],
+    ['2001:db8::1', ['2001:db8::/32']], ['::ffff:192.0.2.10', ['192.0.2.0/24']],
+    ['0.0.0.0', []], ['unknown', []], ["\xff", []],
 ]);
 
-it('does not allowlist neighbouring networks or malformed entries', function (string $ip, string $entry): void {
-    $engine = new Engine([new SensitivePathRule()], new ArrayStore(), new InMemorySink(), new EngineConfig(mode: Mode::Enforce, allowlist: [$entry]));
-    expect($engine->inspect(engineTestRequest($ip), Phase::Inline)->blocked)->toBeTrue();
-})->with([
-    ['192.0.3.10', '192.0.2.0/24'], ['2001:db9::1', '2001:db8::/32'],
-    ['192.0.2.10', 'bad/24'], ['192.0.2.10', '192.0.2.0/33'],
-    ['192.0.2.10', '::/0'], ['192.0.2.10', '192.0.2.0/-1'],
-]);
+it('rejects invalid allowlist configuration at boot', function (): void {
+    expect(fn() => new Engine([], $this->store, $this->sink, new EngineConfig(allowlist: ['abc'])))->toThrow(InvalidArgumentException::class);
+});
 
-it('runs only the requested phase and never bans fuzzy findings', function (): void {
-    $finding = new Finding('test', Severity::Medium, 'Fuzzy');
-    $inline = engineTestRule($finding);
-    $deferred = engineTestRule($finding, Phase::Deferred);
-    $sink = new InMemorySink();
-    $store = new ArrayStore();
-    $engine = new Engine([$inline, $deferred], $store, $sink, new EngineConfig(Mode::Enforce));
+it('skips individual throwing rules and continues', function (bool $phaseThrows): void {
+    $rule = new FakeRule(engineFinding());
+    $decision = (new Engine([new ThrowingRule($phaseThrows), $rule], $this->store, $this->sink, new EngineConfig()))->inspect(engineTestRequest(), Phase::Inline);
+    expect($decision->wouldBlock)->toBeTrue()->and($rule->calls)->toBe(1)->and($this->sink->events())->toHaveCount(1);
+})->with([true, false]);
 
-    foreach (Phase::cases() as $phase) {
-        $decision = $engine->inspect(engineTestRequest(), $phase);
-        expect($decision->findings)->toBe([$finding])
-            ->and($decision->wouldBlock)->toBeFalse()
-            ->and($decision->blocked)->toBeFalse();
+it('treats failed ban lookups as not banned', function (): void {
+    $rule = new FakeRule(engineFinding());
+    $decision = (new Engine([$rule], new ThrowingStore('isBanned'), $this->sink, new EngineConfig()))->inspect(engineTestRequest(), Phase::Inline);
+    expect($decision->wouldBlock)->toBeTrue()->and($decision->alreadyBanned)->toBeFalse()->and($rule->calls)->toBe(1);
+});
+
+it('preserves blocking when writing a ban throws', function (Phase $phase): void {
+    $decision = (new Engine([new FakeRule(engineFinding(), $phase)], new ThrowingStore('ban'), $this->sink, new EngineConfig(Mode::Enforce)))
+        ->inspect(engineTestRequest(), $phase);
+    expect($decision->wouldBlock)->toBeTrue()->and($decision->blocked)->toBe($phase === Phase::Inline)
+        ->and($decision->banForSeconds)->toBeNull()->and($this->sink->events())->toHaveCount(1);
+})->with([Phase::Inline, Phase::Deferred]);
+
+it('preserves decisions and attempts every event when the sink throws', function (bool $banned): void {
+    $sink = new ThrowingSink();
+    if ($banned) {
+        $this->store->ban('203.0.113.9', 60);
     }
-    expect($inline->calls)->toBe(1)
-        ->and($deferred->calls)->toBe(1)
-        ->and($sink->events())->toHaveCount(2)
-        ->and($store->isBanned('203.0.113.9'))->toBeFalse();
+    $rules = [new FakeRule(engineFinding(false)), new FakeRule(engineFinding())];
+    $decision = (new Engine($rules, $this->store, $sink, new EngineConfig(Mode::Enforce)))->inspect(engineTestRequest(), Phase::Inline);
+    expect($decision->wouldBlock)->toBeTrue()->and($decision->blocked)->toBeTrue()
+        ->and($decision->alreadyBanned)->toBe($banned)->and($sink->calls)->toBe($banned ? 1 : 2);
+})->with([true, false]);
+
+it('uses the base duration when increment throws without losing the decision or event', function (): void {
+    $decision = (new Engine([new FakeRule(engineFinding())], new ThrowingStore('increment'), $this->sink, new EngineConfig(Mode::Enforce)))
+        ->inspect(engineTestRequest(), Phase::Inline);
+    expect($decision->findings)->toHaveCount(1)->and($decision->wouldBlock)->toBeTrue()
+        ->and($decision->blocked)->toBeTrue()->and($decision->banForSeconds)->toBe(86400)
+        ->and($this->sink->events())->toHaveCount(1);
 });
 
-it('observes an existing ban in detect mode without running rules', function (): void {
-    $store = new ArrayStore();
-    $store->ban('203.0.113.9', 100);
-    $rule = engineTestRule(null, throws: true);
-    $sink = new InMemorySink();
-    $decision = (new Engine([$rule], $store, $sink, new EngineConfig()))->inspect(engineTestRequest(), Phase::Inline);
-    expect($decision->alreadyBanned)->toBeTrue()
-        ->and($decision->wouldBlock)->toBeTrue()
-        ->and($decision->blocked)->toBeFalse()
-        ->and($rule->calls)->toBe(0)
-        ->and($sink->events())->toHaveCount(1);
-});
-
-it('fails open on throwing rules', function (): void {
-    $engine = new Engine([engineTestRule(null, throws: true)], new ArrayStore(), new InMemorySink(), new EngineConfig(Mode::Enforce));
-    $decision = $engine->inspect(engineTestRequest(), Phase::Inline);
-    expect($decision->hasFindings())->toBeFalse()->and($decision->blocked)->toBeFalse();
-});
-
-it('fails open on throwing sinks', function (): void {
-    $sink = new class implements EventSink {
-        public function record(SecurityEvent $event): void
-        {
-            throw new RuntimeException('sink failed');
-        }
-    };
-    $decision = (new Engine([new SensitivePathRule()], new ArrayStore(), $sink, new EngineConfig()))->inspect(engineTestRequest(), Phase::Inline);
-    expect($decision->hasFindings())->toBeFalse()->and($decision->blocked)->toBeFalse();
-});
-
-it('fails open on throwing stores', function (): void {
-    $store = new class implements Store {
-        public function increment(string $key, int $windowSeconds): int
-        {
-            throw new RuntimeException();
-        }
-        public function ban(string $ip, int $seconds): void
-        {
-            throw new RuntimeException();
-        }
-        public function isBanned(string $ip): bool
-        {
-            throw new RuntimeException();
-        }
-        public function unban(string $ip): void
-        {
-            throw new RuntimeException();
-        }
-    };
-    $decision = (new Engine([new SensitivePathRule()], $store, new InMemorySink(), new EngineConfig(Mode::Enforce)))->inspect(engineTestRequest(), Phase::Inline);
-    expect($decision->hasFindings())->toBeFalse()->and($decision->blocked)->toBeFalse();
+it('materialises generator rules at construction and reuses them', function (): void {
+    $iterations = 0;
+    $rule = new FakeRule(engineFinding());
+    $rules = (function () use (&$iterations, $rule): Generator {
+        $iterations++;
+        yield 'rule' => $rule;
+    })();
+    $engine = new Engine($rules, $this->store, $this->sink, new EngineConfig());
+    expect($iterations)->toBe(1);
+    for ($i = 0; $i < 2; $i++) {
+        expect($engine->inspect(engineTestRequest(), Phase::Inline)->wouldBlock)->toBeTrue();
+    }
+    expect($rule->calls)->toBe(2)->and($iterations)->toBe(1);
 });

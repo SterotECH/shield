@@ -1,5 +1,0 @@
-{
-  "description": "Certificate renewal check must never be flagged",
-  "request": { "method": "GET", "path": "/.well-known/acme-challenge/abc123", "query": {}, "headers": {}, "body": "", "ip": "203.0.113.60" },
-  "expect": { "rules": [] }
-}

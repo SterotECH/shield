@@ -1,0 +1,16 @@
+{
+    "description": "env local",
+    "request": {
+        "method": "GET",
+        "path": "/.env.local",
+        "query": {},
+        "headers": {},
+        "body": "",
+        "ip": "203.0.113.9"
+    },
+    "expect": {
+        "rules": [
+            "sensitive-path"
+        ]
+    }
+}

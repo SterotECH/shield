@@ -54,18 +54,21 @@ final class RequestFactory
         $parameters = [];
         foreach ($query as $key => $value) {
             if (is_string($value) || is_array($value)) {
-                $parameters[$key] = $value;
+                $parameters[(string) $key] = $value;
             }
         }
-        $body = mb_strcut($rawBody, 0, max(0, $maxBodyBytes), 'UTF-8');
+        $maxBodyBytes = max(0, $maxBodyBytes);
+        $truncated = mb_strlen($rawBody, '8bit') > $maxBodyBytes;
+        $body = $truncated ? mb_strcut($rawBody, 0, $maxBodyBytes, 'UTF-8') : $rawBody;
 
         return new NormalizedRequest(
-            is_string($server['REQUEST_METHOD'] ?? null) ? $server['REQUEST_METHOD'] : 'GET',
+            is_string($server['REQUEST_METHOD'] ?? null) && mb_check_encoding($server['REQUEST_METHOD'], 'UTF-8')
+                ? mb_strtoupper($server['REQUEST_METHOD'], 'UTF-8') : 'GET',
             self::normalisePath(is_string($server['REQUEST_URI'] ?? null) ? $server['REQUEST_URI'] : '/'),
             $parameters,
             $headers,
             $body,
-            $body !== $rawBody,
+            $truncated,
             self::resolveClientIp($server, $trustedProxies),
             $tenantId,
             $userId,
@@ -75,15 +78,29 @@ final class RequestFactory
     /** Decode once, remove the query and collapse duplicate slashes. */
     private static function normalisePath(string $requestUri): string
     {
-        if (!mb_check_encoding($requestUri, 'UTF-8')) {
-            return '/';
-        }
-        $path = rawurldecode(explode('?', $requestUri, 2)[0]);
-        if (!mb_check_encoding($path, 'UTF-8')) {
-            return '/';
+        $path = explode('?', $requestUri, 2)[0];
+        if (mb_check_encoding($path, 'UTF-8')) {
+            $scheme = mb_strpos($path, '://', 0, 'UTF-8');
+            if ($scheme !== false) {
+                $start = mb_strpos($path, '/', $scheme + 3, 'UTF-8');
+                $path = $start === false ? '/' : mb_substr($path, $start, null, 'UTF-8');
+            }
         }
 
-        return preg_replace('~/+~', '/', '/' . $path) ?? '/';
+        // Work on delimiters as bytes so invalid UTF-8 and null bytes survive.
+        $path = rawurldecode($path);
+        $segments = [];
+        foreach (explode('/', $path) as $segment) {
+            if ($segment !== '') {
+                $segments[] = $segment;
+            }
+        }
+        $normalised = '/' . implode('/', $segments);
+        if ($segments !== [] && str_ends_with($path, '/')) {
+            $normalised .= '/';
+        }
+
+        return $normalised;
     }
 
     /**
@@ -94,15 +111,43 @@ final class RequestFactory
      */
     private static function resolveClientIp(array $server, array $trustedProxies): string
     {
-        $remote = is_string($server['REMOTE_ADDR'] ?? null) ? $server['REMOTE_ADDR'] : '';
+        $remote = is_string($server['REMOTE_ADDR'] ?? null) ? $server['REMOTE_ADDR'] : '0.0.0.0';
         $forwarded = $server['HTTP_X_FORWARDED_FOR'] ?? null;
-        if (!in_array($remote, $trustedProxies, true) || !is_string($forwarded) || !mb_check_encoding($forwarded, 'UTF-8')) {
-            return $remote;
+        // Normalise the peer first, then consider forwarded entries only if trusted.
+        $addresses = [$remote];
+        if (is_string($forwarded)) {
+            $addresses = array_merge($addresses, array_reverse(explode(',', $forwarded)));
         }
-        foreach (array_reverse(explode(',', $forwarded)) as $address) {
+        foreach ($addresses as $index => $address) {
+            if (!mb_check_encoding($address, 'UTF-8')) {
+                if ($index === 0) {
+                    return $remote;
+                }
+
+                continue;
+            }
             $address = mb_trim($address, null, 'UTF-8');
+            if (mb_substr($address, 0, 1, 'UTF-8') === '[') {
+                $end = mb_strpos($address, ']:', 0, 'UTF-8');
+                if ($end !== false && filter_var(mb_substr($address, $end + 2, null, 'UTF-8'), FILTER_VALIDATE_INT) !== false) {
+                    $address = mb_substr($address, 1, $end - 1, 'UTF-8');
+                }
+            } elseif (mb_substr_count($address, ':', 'UTF-8') === 1) {
+                [$host, $port] = explode(':', $address, 2);
+                if (filter_var($port, FILTER_VALIDATE_INT) !== false) {
+                    $address = $host;
+                }
+            }
+            if ($index === 0) {
+                $remote = $address;
+                if (!in_array($remote, $trustedProxies, true)) {
+                    return $remote;
+                }
+
+                continue;
+            }
             if (filter_var($address, FILTER_VALIDATE_IP) === false) {
-                return $remote;
+                continue;
             }
             if (!in_array($address, $trustedProxies, true)) {
                 return $address;

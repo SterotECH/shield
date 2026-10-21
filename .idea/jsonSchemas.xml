@@ -14,6 +14,9 @@
                   <Item>
                     <option name="path" value="packages/core/composer.json" />
                   </Item>
+                  <Item>
+                    <option name="path" value="packages/cli/composer.json" />
+                  </Item>
                 </list>
               </option>
             </SchemaInfo>

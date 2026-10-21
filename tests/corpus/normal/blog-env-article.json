@@ -1,0 +1,14 @@
+{
+    "description": "blog env article",
+    "request": {
+        "method": "GET",
+        "path": "/blog/what-is-env",
+        "query": {},
+        "headers": {},
+        "body": "",
+        "ip": "203.0.113.9"
+    },
+    "expect": {
+        "rules": []
+    }
+}
