@@ -48,6 +48,23 @@ Reset clears bans and counters, preserving event history. Helper routes are
 enabled only with `SHIELD_DEMO=1`. This local demo store is not for production;
 use Redis there.
 
+## Redis store
+
+Install `packages/redis` with Composer (PHP 8.5, ext-mbstring and ext-redis).
+Use `Stero\Shield\Redis\RedisConnector::connect($host, $port, $password)`;
+it returns a native Redis connection or null with 100 ms connection and read
+timeouts by default. Wrap a connection in `PhpRedisClient`, then `RedisStore`;
+use `NullStore` when the connection is null. All three classes share the
+`Stero\Shield\Redis` namespace. Create a fresh store for each request: after
+one failure it skips all later operations on that instance. Counters use
+fixed windows and bans always expire. Pass a distinct prefix per application.
+
+Run `composer check` in `packages/redis`. Integration tests skip unless
+`SHIELD_TEST_REDIS=host:port` is set. With Lerd Redis running, use
+`lerd-redis:6379` inside the PHP container and pass the variable into that
+container. Alternatively, `docker compose up -d` in `packages/redis` starts
+Redis 7 on host port 6380. Tests clean up only their random prefixes via SCAN.
+
 ## Viewing events
 
 Install the independent viewer from `packages/cli` with `composer install`

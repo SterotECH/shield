@@ -4,3 +4,7 @@ packages/cli/vendor/
 packages/cli/.phpstan-cache/
 packages/cli/.phpunit.cache/
 packages/cli/.pest/
+packages/redis/vendor/
+packages/redis/.phpstan-cache/
+packages/redis/.phpunit.cache/
+packages/redis/.pest/
