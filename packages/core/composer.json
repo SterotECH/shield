@@ -17,7 +17,13 @@
             "Stero\\Shield\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Shield\\Demo\\": "demo/"
+        }
+    },
     "scripts": {
+        "demo": "php -S localhost:8080 -t demo",
         "test": "pest",
         "analyse": "phpstan analyse --memory-limit=1G",
         "lint": "pint",

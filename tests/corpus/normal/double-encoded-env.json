@@ -1,0 +1,15 @@
+{
+    "description": "The path is decoded once, so this stays a literal segment \"%2eenv\" and is not flagged.",
+    "request": {
+        "method": "GET",
+        "path": "/%252eenv",
+        "query": {},
+        "headers": {},
+        "body": "",
+        "ip": "203.0.113.9"
+    },
+    "expect": {
+        "rules": [],
+        "would_block": false
+    }
+}

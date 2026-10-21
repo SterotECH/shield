@@ -1,0 +1,18 @@
+{
+    "description": "Environment probe with real invalid UTF-8 bytes",
+    "request": {
+        "method": "GET",
+        "path_b64": "L/8vLmVudg==",
+        "path": "/.env",
+        "query": {},
+        "headers": {},
+        "body": "",
+        "ip": "203.0.113.9"
+    },
+    "expect": {
+        "rules": [
+            "sensitive-path"
+        ],
+        "would_block": true
+    }
+}

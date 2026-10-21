@@ -1,0 +1,17 @@
+{
+    "description": "Search text mentions an environment file",
+    "request": {
+        "method": "GET",
+        "path": "/search",
+        "query": {
+            "q": ".env file"
+        },
+        "headers": {},
+        "body": "",
+        "ip": "203.0.113.9"
+    },
+    "expect": {
+        "rules": [],
+        "would_block": false
+    }
+}

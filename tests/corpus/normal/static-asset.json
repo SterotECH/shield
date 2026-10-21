@@ -1,0 +1,17 @@
+{
+    "description": "Normal browser static asset",
+    "request": {
+        "method": "GET",
+        "path": "/assets/app.js",
+        "query": {},
+        "headers": {
+            "User-Agent": "Mozilla/5.0"
+        },
+        "body": "",
+        "ip": "203.0.113.9"
+    },
+    "expect": {
+        "rules": [],
+        "would_block": false
+    }
+}
