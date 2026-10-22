@@ -313,7 +313,7 @@ set this variable inside the container, using a hostname it can reach.
 GitHub CI runs on pushes, pull requests, manual dispatch and weekly. It runs
 the full gate on PHP 8.5 with a disposable Redis service, plus a Gitleaks scan
 of Git history with secrets redacted. Dependabot proposes weekly dependency
-updates. No publishing credentials are needed and no release is published.
+updates. CI itself needs no publishing credentials.
 
 In GitHub branch protection for the default branch, require pull requests
 and the checks `Tests, analysis and dependency audit` and `Secret scan`,
@@ -321,6 +321,44 @@ and disallow bypasses and force pushes. Hooks alone can be bypassed; these
 repository settings must be enabled by a repository administrator after
 the workflow has run. Enable GitHub secret scanning and push protection
 in the repository's security settings as well.
+
+## Releases
+
+After CI succeeds on a push to `main`, Release Please creates or updates a
+release PR with a proposed version and changelog. Review that PR, wait for
+its CI checks, then merge it. After the merged commit passes CI, the Release
+workflow creates the `vX.Y.Z` tag and GitHub Release. No manual tagging is
+needed. The baseline for this setup is the existing `v0.2.1` tag.
+
+Choose the version through Conventional Commits in the commits merged to
+`main` (or the squash commit message):
+
+| Commit | Proposed change | From 0.2.1 |
+| --- | --- | --- |
+| `fix: correct path matching` | Patch | 0.2.2 |
+| `feat: add an adapter` | Minor | 0.3.0 |
+| `feat!: change the public API` | Major | 1.0.0 |
+
+`BREAKING CHANGE:` in a commit footer also requests a major release. Docs,
+tests and chores alone do not normally start a release. To request an exact
+version, include a `Release-As: 0.3.0` footer in a merged Conventional Commit.
+Keep a blank line between the subject and footer. The release PR shows the
+result before anything is published. The Release workflow can also be run
+manually on `main` to retry automation; version selection stays in commits.
+
+One-time setup: create a fine-grained personal access token restricted to
+this repository, with Contents, Pull requests and Issues read/write access,
+and save it as the Actions secret `RELEASE_PLEASE_TOKEN`. Issues permission
+allows Release Please to manage its lifecycle labels. Give the token an
+expiry and rotate it before expiry. The built-in `GITHUB_TOKEN` is unsuitable
+here because PRs it creates do not trigger the required CI workflows.
+Branch protection must require the CI checks described above before a
+release PR can merge. Keep the Release workflow and its configuration under
+review because they control publication.
+
+Ensure Packagist's GitHub webhook/auto-update is enabled for `stero/shield`
+so new tags become Composer versions. This workflow publishes the GitHub
+release; Packagist receives tags through that integration.
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting and [LICENSE](LICENSE)
 for the MIT licence.

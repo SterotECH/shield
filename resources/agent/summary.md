@@ -14,5 +14,8 @@
 Repository gates: `npm ci` enables Husky; `npm run check:commit` checks
 manifests and formatting; `npm run check:push` runs all package checks and
 dependency audits. GitHub CI adds Redis integration tests and secret scanning.
+Release Please proposes versions from Conventional Commits; merge its release
+PR to publish after CI. `Release-As:` selects an exact version. Setup requires
+the `RELEASE_PLEASE_TOKEN` Actions secret; see the repository README.
 
 Full reference: vendor/stero/shield/resources/agent/shield.md

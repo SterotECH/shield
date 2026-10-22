@@ -15,6 +15,11 @@ and formatting; `npm run check:push` runs the full Composer checks and
 dependency audits. Local PHP tooling uses lerd when available. GitHub CI
 also runs Redis integration tests and scans Git history for secrets. See
 the repository README for setup and required branch protection checks.
+Releases use Release Please: Conventional Commits propose patch (`fix`),
+minor (`feat`) or major (`!` / `BREAKING CHANGE`) releases. Merge its release
+PR after CI; the Release workflow creates the tag and GitHub Release after
+main passes CI. An exact version uses a `Release-As:` commit footer. See
+the README for the required `RELEASE_PLEASE_TOKEN` secret and Packagist setup.
 
 ```sh
 composer require stero/shield
