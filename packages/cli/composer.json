@@ -9,7 +9,7 @@
         "nunomaduro/termwind": "^2.3"
     },
     "require-dev": {
-        "pestphp/pest": "^3.8",
+        "pestphp/pest": "^5.3",
         "phpstan/phpstan": "^2.3",
         "laravel/pint": "^1.32"
     },
