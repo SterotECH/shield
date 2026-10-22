@@ -242,18 +242,35 @@ Run `shield:install --agents=...` again after upgrading to refresh your targets.
 
 ## View events
 
-The CLI is separate from the installed library. From a repository clone:
+The event viewer is included with `stero/shield`. In Laravel, it automatically
+uses the configured `shield.events_path`:
 
 ```sh
-cd packages/cli
-composer install
-bin/shield events --file=/absolute/path/to/your-app/var/shield/events.jsonl
-bin/shield stats --file=/absolute/path/to/your-app/var/shield/events.jsonl --since=24h
-bin/shield tail --file=/absolute/path/to/your-app/var/shield/events.jsonl
+php artisan shield:logs
+php artisan shield:logs --limit=20 --severity=high
+php artisan shield:logs --follow
+php artisan shield:logs --json
+```
+
+`shield:logs` shows the latest 50 matching events. `--follow` shows the latest
+50 events and follows new ones until Ctrl-C. Use `--limit` to change that
+count. Filters (`--since`, `--rule`, `--ip`, `--tenant`, `--severity`,
+`--would-block`) apply to the snapshot view and cannot be combined with
+`--follow`. Both views support `--json`, `--theme` and `--no-ansi`.
+
+For any framework, the same viewer is available as a Composer binary:
+
+```sh
+vendor/bin/shield events --file=/absolute/path/to/events.jsonl
+vendor/bin/shield stats --file=/absolute/path/to/events.jsonl --since=24h
+vendor/bin/shield tail --file=/absolute/path/to/events.jsonl
 ```
 
 Use `--severity=high` or `--would-block` with `events` to narrow the results.
 Set `SHIELD_EVENTS` instead of repeating `--file`. Stop `tail` with Ctrl-C.
+Future framework adapters can delegate to `Stero\Shield\CLI\Application`,
+as Laravel does, passing their configured events path. Laravel is currently
+the only framework adapter supplied.
 
 ## Run the demo
 

@@ -2,8 +2,8 @@
 set -eu
 
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
-archive_list=$(git -C "$repo" archive HEAD | tar -tf -)
-for resource in resources/agent/shield.md resources/agent/summary.md; do
+archive_list=$(git -C "$repo" archive --worktree-attributes HEAD | tar -tf -)
+for resource in resources/agent/shield.md resources/agent/summary.md packages/cli/bin/shield packages/cli/src/Application.php; do
     if ! printf '%s\n' "$archive_list" | grep -Fx "$resource" >/dev/null; then
         echo "Composer archive is missing $resource" >&2
         exit 1
@@ -12,6 +12,11 @@ done
 php -r '
 declare(strict_types=1);
 $manifest = json_decode(file_get_contents($argv[1]), true, flags: JSON_THROW_ON_ERROR);
+if (($manifest["autoload"]["psr-4"]["Stero\\Shield\\CLI\\"] ?? null) !== "packages/cli/src/"
+    || !in_array("packages/cli/bin/shield", $manifest["bin"] ?? [], true)) {
+    fwrite(STDERR, "CLI autoload or binary registration is missing\n");
+    exit(1);
+}
 if (($manifest["autoload"]["psr-4"]["Shield\\Laravel\\"] ?? null) !== "packages/laravel/src/"
     || !in_array("Shield\\Laravel\\ShieldServiceProvider", $manifest["extra"]["laravel"]["providers"] ?? [], true)) {
     fwrite(STDERR, "Laravel package autoload or provider discovery is missing\n");
@@ -35,6 +40,10 @@ php -r '
 declare(strict_types=1);
 require "vendor/autoload.php";
 $sink = new Stero\Shield\Events\InMemorySink();
+if (!class_exists(Stero\Shield\CLI\Application::class)) {
+    fwrite(STDERR, "CLI namespace is missing\n");
+    exit(1);
+}
 $engine = new Stero\Shield\Engine(
     [new Stero\Shield\Rules\SensitivePathRule()],
     new Stero\Shield\Store\ArrayStore(),
@@ -59,3 +68,6 @@ if (count($decision->findings) !== 1 || $decision->findings[0]->ruleId !== "sens
 }
 echo "ok\n";
 '
+printf '%s\n' '{"rule":"install-probe","severity":"high"}' > events.jsonl
+vendor/bin/shield events --file=events.jsonl --json > actual.jsonl
+cmp events.jsonl actual.jsonl

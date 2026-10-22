@@ -3,9 +3,12 @@
 
 declare(strict_types=1);
 
-$autoloader = __DIR__ . '/../vendor/autoload.php';
+$autoloader = $_composer_autoload_path ?? __DIR__ . '/../vendor/autoload.php';
+if (!is_file($autoloader)) {
+    $autoloader = __DIR__ . '/../../../vendor/autoload.php';
+}
 if (!is_file($autoloader) || !is_readable($autoloader)) {
-    fwrite(STDERR, "Error: run composer install in packages/cli first.\n");
+    fwrite(STDERR, "Error: run composer install first.\n");
     exit(1);
 }
 

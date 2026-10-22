@@ -72,7 +72,13 @@ tail -n 50 storage/shield/events.jsonl | jq .
 tail -f storage/shield/events.jsonl | jq .
 ```
 
-The Shield CLI viewer is not installed with the package.
+Laravel includes `php artisan shield:logs` (latest 50 matching events) and
+`php artisan shield:logs --follow` (follow new events, Ctrl-C to stop).
+Both use the configured `shield.events_path`. Use `--limit=20` to change the
+count. Snapshot filters: `--since`, `--rule`, `--ip`, `--tenant`, `--severity`,
+`--would-block`. Filters cannot be combined with `--follow`.
+Both views accept `--json`, `--theme` and `--no-ansi`.
+Other frameworks can use `vendor/bin/shield events|tail|stats --file=/path/to/events.jsonl`.
 
 ## Event fields and meaning
 

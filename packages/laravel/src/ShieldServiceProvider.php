@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 use Redis;
 use Shield\Laravel\Commands\InstallCommand;
+use Shield\Laravel\Commands\LogsCommand;
 use Shield\Laravel\Commands\StatusCommand;
 use Shield\Laravel\Commands\TimingCommand;
 use Shield\Runtime\EngineFactory;
@@ -116,7 +117,7 @@ final class ShieldServiceProvider extends ServiceProvider
         ], 'shield-config');
 
         if ($this->app->runningInConsole()) {
-            $this->commands([InstallCommand::class, StatusCommand::class, TimingCommand::class]);
+            $this->commands([InstallCommand::class, StatusCommand::class, TimingCommand::class, LogsCommand::class]);
         }
 
         if (! Config::boolean('shield.enabled', false)

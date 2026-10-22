@@ -10,7 +10,13 @@
         "source": "https://github.com/sterotech/shield"
     },
     "authors": [{"name": "Stero Tech Inc."}],
-    "require": {"ext-mbstring": "*", "php": "^8.5"},
+    "require": {
+        "ext-mbstring": "*",
+        "php": "^8.5",
+        "symfony/console": "^7.4 || ^8.0",
+        "nunomaduro/termwind": "^2.3"
+    },
+    "bin": ["packages/cli/bin/shield"],
     "suggest": {
         "ext-redis": "Required for the Redis store",
         "laravel/framework": "Required to use the Laravel adapter"
@@ -20,13 +26,24 @@
             "Stero\\Shield\\": "packages/core/src/",
             "Stero\\Shield\\Redis\\": "packages/redis/src/",
             "Shield\\Runtime\\": "packages/runtime/src/",
-            "Shield\\Laravel\\": "packages/laravel/src/"
+            "Shield\\Laravel\\": "packages/laravel/src/",
+            "Stero\\Shield\\CLI\\": "packages/cli/src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": ["Shield\\Laravel\\ShieldServiceProvider"]
         }
+    },
+    "scripts": {
+        "check": [
+            "@composer --working-dir=packages/core check",
+            "@composer --working-dir=packages/redis check",
+            "@composer --working-dir=packages/runtime check",
+            "@composer --working-dir=packages/cli check",
+            "@composer --working-dir=packages/laravel check",
+            "sh tests/install/check.sh"
+        ]
     },
     "config": {"sort-packages": true}
 }
