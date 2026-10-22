@@ -1,3 +1,5 @@
+/vendor/
+/.idea/laravel-idea.xml
 packages/core/demo/.state/
 packages/core/demo/events.jsonl
 packages/cli/vendor/
