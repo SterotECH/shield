@@ -11,6 +11,7 @@
 9. Restore client IPs in Nginx, never forwarded headers in PHP; keep middleware prepended globally before tenancy and sessions.
 10. Never edit vendor or core defaults for false positives: sensitive_paths replaces the full default list; use allowlist entries for individual clients and skip_prefixes for exclusions; add rules only in Shield with attack and normal corpus files.
 
+Keep each package's `phpunit.xml` so Pest also runs with PHP assertions disabled.
 Repository gates: `npm ci` enables Husky; `npm run check:commit` checks
 manifests and formatting; `npm run check:push` runs all package checks and
 dependency audits. GitHub CI adds Redis integration tests and secret scanning.
