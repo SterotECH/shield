@@ -9,6 +9,13 @@ with PHP 8.5 or later and ext-mbstring.
 
 ## Install
 
+For repository development, install all six locked Composer dependency sets
+and run `npm ci` to enable Husky. `npm run check:commit` validates manifests
+and formatting; `npm run check:push` runs the full Composer checks and
+dependency audits. Local PHP tooling uses lerd when available. GitHub CI
+also runs Redis integration tests and scans Git history for secrets. See
+the repository README for setup and required branch protection checks.
+
 ```sh
 composer require stero/shield
 php artisan shield:install

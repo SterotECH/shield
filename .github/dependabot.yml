@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: composer
+    directories:
+      - /
+      - /packages/core
+      - /packages/redis
+      - /packages/runtime
+      - /packages/cli
+      - /packages/laravel
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

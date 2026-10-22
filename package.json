@@ -1,0 +1,13 @@
+{
+  "name": "shield-development",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "test": "node --test tests/quality/*.test.mjs",
+    "check:commit": "npm test && sh scripts/quality.sh commit",
+    "check:push": "npm test && npm audit && sh scripts/quality.sh push"
+  },
+  "devDependencies": {
+    "husky": "9.1.7"
+  }
+}

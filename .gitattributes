@@ -8,3 +8,7 @@
 /CLAUDE.md export-ignore
 /AGENTS.md export-ignore
 /.github export-ignore
+/.husky export-ignore
+/scripts export-ignore
+/package.json export-ignore
+/package-lock.json export-ignore

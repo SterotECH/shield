@@ -288,12 +288,39 @@ written to `packages/core/demo/.state/events.jsonl`. Restart with
 
 ## Run the tests
 
-Run `composer install` and `composer check` in each of `packages/core`,
-`packages/redis`, `packages/runtime`, `packages/laravel` and `packages/cli`.
-Core tests include the attack and normal
-request corpus. Redis integration tests require `SHIELD_TEST_REDIS=host:port`;
-otherwise they skip. From the repository root, run `sh tests/install/check.sh`
-to test installation through Composer.
+Use PHP 8.5 with mbstring and redis, Composer 2, and Node.js 24 or later.
+Install the locked dependencies from the repository root:
+
+```sh
+for directory in . packages/core packages/redis packages/runtime packages/cli packages/laravel; do
+    composer --working-dir="$directory" install --no-interaction --prefer-dist
+done
+npm ci
+```
+
+`npm ci` activates Husky for this clone. Pre-commit checks all Composer
+manifests and PHP formatting without rewriting files. Pre-push runs the
+full suite, PHPStan, Pint, the installation smoke test, and Composer and npm
+dependency audits. Both hooks also test the gate's failure handling. Run
+`npm run check:push` manually for the same gate. Local PHP commands use lerd
+when available; otherwise they use Composer directly.
+
+Core tests include the attack and normal request corpus. Redis integration
+tests require `SHIELD_TEST_REDIS=host:port` pointing to a disposable Redis
+instance; otherwise they skip locally. When using a container runtime,
+set this variable inside the container, using a hostname it can reach.
+
+GitHub CI runs on pushes, pull requests, manual dispatch and weekly. It runs
+the full gate on PHP 8.5 with a disposable Redis service, plus a Gitleaks scan
+of Git history with secrets redacted. Dependabot proposes weekly dependency
+updates. No publishing credentials are needed and no release is published.
+
+In GitHub branch protection for the default branch, require pull requests
+and the checks `Tests, analysis and dependency audit` and `Secret scan`,
+and disallow bypasses and force pushes. Hooks alone can be bypassed; these
+repository settings must be enabled by a repository administrator after
+the workflow has run. Enable GitHub secret scanning and push protection
+in the repository's security settings as well.
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting and [LICENSE](LICENSE)
 for the MIT licence.

@@ -1,4 +1,6 @@
 /vendor/
+/node_modules/
+/.husky/_/
 /.idea/laravel-idea.xml
 packages/core/demo/.state/
 packages/core/demo/events.jsonl
