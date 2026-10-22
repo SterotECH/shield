@@ -8,6 +8,8 @@ The owner must be able to read and review everything you write. Prefer plain,
 boring, explicit PHP over clever code. If a choice is unclear, take the
 simpler option and say what you assumed.
 
+When env names, commands, config keys or default needles change, update resources/agent/shield.md and summary.md in the same commit.
+
 ## Repository layout
 
     packages/core/src      the engine (pure PHP, no framework)

@@ -224,6 +224,22 @@ Behind Cloudflare or another proxy, configure the web server to restore the
 real client IP before PHP receives the request. The Laravel adapter never
 reads `X-Forwarded-For` or other forwarded client IP headers.
 
+## Agent files
+
+`php artisan shield:install` publishes a shared Shield skill at
+`.agents/skills/shield/SKILL.md`, the skill location used by Codex and OpenCode.
+All formats use the same reference shipped in `resources/agent/shield.md`.
+Use `--agents=claude` for a Claude skill, `--agents=agents` for a managed
+`AGENTS.md` summary, `--agents=cursor` for a Cursor rule, or `--agents=copilot`
+for Copilot instructions. Comma lists select several; `--agents=all` publishes
+all five and `--agents=none` skips agent files.
+
+Whole files containing the `shield-agent-file` marker are regenerated on
+upgrade. Unmarked user files are skipped unless `--force-agents` is supplied.
+Only the `shield:begin` to `shield:end` block is managed in `AGENTS.md`;
+malformed blocks are left untouched and reported as failures.
+Run `shield:install --agents=...` again after upgrading to refresh your targets.
+
 ## View events
 
 The CLI is separate from the installed library. From a repository clone:

@@ -2,6 +2,13 @@
 set -eu
 
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+archive_list=$(git -C "$repo" archive HEAD | tar -tf -)
+for resource in resources/agent/shield.md resources/agent/summary.md; do
+    if ! printf '%s\n' "$archive_list" | grep -Fx "$resource" >/dev/null; then
+        echo "Composer archive is missing $resource" >&2
+        exit 1
+    fi
+done
 php -r '
 declare(strict_types=1);
 $manifest = json_decode(file_get_contents($argv[1]), true, flags: JSON_THROW_ON_ERROR);

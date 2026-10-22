@@ -5,17 +5,32 @@ declare(strict_types=1);
 namespace Shield\Laravel\Commands;
 
 use Illuminate\Console\Command;
+use InvalidArgumentException;
+use Shield\Runtime\Agent\AgentFilesPublisher;
+use Shield\Runtime\Agent\AgentTarget;
 use Throwable;
 
-/** Publishes Shield configuration and prepares its private storage folder. */
+/** Publishes configuration and agent instructions and prepares private storage. */
 final class InstallCommand extends Command
 {
-    protected $signature = 'shield:install';
+    protected $signature = 'shield:install {--agents=shared : shared, claude, agents, cursor, copilot, all or none} {--force-agents : Replace user-owned agent files}';
 
     protected $description = 'Publish Shield configuration and prepare storage';
 
     public function handle(): int
     {
+        try {
+            $agents = $this->option('agents');
+            if (! is_string($agents)) {
+                throw new InvalidArgumentException('Agent targets must be a string.');
+            }
+            $targets = AgentTarget::fromList($agents);
+        } catch (InvalidArgumentException $error) {
+            $this->error($error->getMessage());
+
+            return self::FAILURE;
+        }
+
         $this->call('vendor:publish', ['--tag' => 'shield-config']);
 
         $directory = storage_path('shield');
@@ -41,6 +56,18 @@ final class InstallCommand extends Command
         $this->newLine();
         $this->line('Next: review config/shield.php, configure Redis and the allowlist, then run php artisan shield:status.');
 
-        return self::SUCCESS;
+        $results = (new AgentFilesPublisher)->publish(
+            base_path(),
+            dirname(__DIR__, 4).'/resources/agent',
+            $targets,
+            (bool) $this->option('force-agents'),
+        );
+        $failed = false;
+        foreach ($results as $result) {
+            $this->line($result->status.' '.$result->path.' '.$result->message);
+            $failed = $failed || $result->status === 'failed';
+        }
+
+        return $failed ? self::FAILURE : self::SUCCESS;
     }
 }
