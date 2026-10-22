@@ -33,7 +33,7 @@ it('fails open for each method and short-circuits all later calls', function (st
         'unban' => $store->unban('192.0.2.1'),
     };
     expect($result)->toBe(match ($method) {
-        'increment' => 0, 'isBanned' => false, default => null
+        'increment' => 0, 'isBanned' => false, default => null,
     });
     expect($store->increment('later', 2))->toBe(0);
     expect($store->isBanned('192.0.2.2'))->toBeFalse();

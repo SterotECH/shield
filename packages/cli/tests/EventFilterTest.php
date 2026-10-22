@@ -12,7 +12,7 @@ it('applies each filter alone and in combination', function (array $options): vo
     foreach ($options as $key => $value) {
         $changed = $event;
         $changed[match ($key) {
-            'since' => 'ts', 'would-block' => 'would_block', default => $key
+            'since' => 'ts', 'would-block' => 'would_block', default => $key,
         }] = match ($key) {
             'since' => '2020-01-01T00:00:00Z', 'would-block' => false, 'severity' => 'low', default => 'other',
         };

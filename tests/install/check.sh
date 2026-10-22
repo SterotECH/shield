@@ -30,8 +30,13 @@ $request = Stero\Shield\Http\RequestFactory::fromGlobals([
 ], [], "");
 $decision = $engine->inspect($request, Stero\Shield\Rules\Phase::Inline);
 $fallback = new Stero\Shield\Redis\NullStore();
+$settings = Shield\Runtime\Settings::fromArray(["enabled" => true]);
+$runtimeEngine = Shield\Runtime\EngineFactory::create($settings, new Stero\Shield\Store\ArrayStore(), new Stero\Shield\Events\InMemorySink());
+$guard = new Shield\Runtime\Guard($settings, $runtimeEngine);
+$inspection = $guard->before($request);
 if (count($decision->findings) !== 1 || $decision->findings[0]->ruleId !== "sensitive-path"
     || !$decision->wouldBlock || $decision->blocked || count($sink->events()) !== 1
+    || count($inspection->decision->findings) !== 1 || !$inspection->decision->wouldBlock
     || $fallback->isBanned("192.0.2.1")) {
     fwrite(STDERR, "Installation smoke check failed\n");
     exit(1);

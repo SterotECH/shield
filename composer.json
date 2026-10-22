@@ -15,7 +15,8 @@
     "autoload": {
         "psr-4": {
             "Stero\\Shield\\": "packages/core/src/",
-            "Stero\\Shield\\Redis\\": "packages/redis/src/"
+            "Stero\\Shield\\Redis\\": "packages/redis/src/",
+            "Shield\\Runtime\\": "packages/runtime/src/"
         }
     },
     "config": {"sort-packages": true}

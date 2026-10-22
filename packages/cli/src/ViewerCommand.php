@@ -113,7 +113,7 @@ final class ViewerCommand extends Command implements SignalableCommandInterface
             $modes = [];
             foreach ($rows as $row) {
                 $mode = match ($row['event']['mode'] ?? null) {
-                    'detect' => 'detect', 'enforce' => 'enforce', default => '-'
+                    'detect' => 'detect', 'enforce' => 'enforce', default => '-',
                 };
                 $modes[$mode] = true;
             }

@@ -23,7 +23,7 @@ final class Statistics
         foreach ($events as $event) {
             $total++;
             $mode = match ($event['mode'] ?? null) {
-                'detect' => 'detect', 'enforce' => 'enforce', default => '-'
+                'detect' => 'detect', 'enforce' => 'enforce', default => '-',
             };
             $modes[$mode] = ($modes[$mode] ?? 0) + 1;
             $wouldBlock += ($event['would_block'] ?? null) === true ? 1 : 0;

@@ -71,7 +71,7 @@ final readonly class EventFilter
             if (preg_match('/\A([1-9][0-9]*)([mhd])\z/u', $value, $parts) === 1) {
                 $number = filter_var($parts[1], FILTER_VALIDATE_INT);
                 $factor = match ($parts[2]) {
-                    'm' => 60, 'h' => 3600, default => 86400
+                    'm' => 60, 'h' => 3600, default => 86400,
                 };
                 if (is_int($number) && $number <= intdiv(PHP_INT_MAX, $factor)) {
                     try {
@@ -93,7 +93,7 @@ final readonly class EventFilter
     private static function rank(mixed $value): int
     {
         return match ($value) {
-            'low' => 1, 'medium' => 2, 'high' => 3, 'critical' => 4, default => 0
+            'low' => 1, 'medium' => 2, 'high' => 3, 'critical' => 4, default => 0,
         };
     }
 }

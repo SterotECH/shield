@@ -38,8 +38,9 @@ runs the `Rule`s for one `Phase`, applies `Mode`, manages bans through a
 
 ## Hard rules
 
-1. No framework imports in `packages/core`. No Laravel, Symfony or PSR-7
-   types. The only allowed extra dependency is `psr/log`, and only if asked.
+1. No framework imports in `packages/core`, `packages/redis` or
+   `packages/runtime`. Only a framework adapter package may import its own
+   framework.
 2. `declare(strict_types=1);` in every file. PHP 8.3 or later. Value objects
    are `final readonly`.
 3. Fail open. Rules, stores and sinks must never throw into a user request.
@@ -71,6 +72,13 @@ runs the `Rule`s for one `Phase`, applies `Mode`, manages bans through a
 15. packages/redis may depend on ext-redis and on the core's Store
        interface only. It never imports Laravel or any other framework.
        Every Redis failure fails open.
+16. Adapters (`packages/laravel` and later ones) hold no security logic.
+    They only translate: build a `NormalizedRequest` in, apply a `Decision`
+    out. Fail-open handling, skip prefixes, allowlists, timing and status all
+    live in `packages/runtime`.
+17. Every top-level namespace must be in the ROOT `composer.json`
+    autoload, and `tests/install/check.sh` must exercise it. Sub-package
+    `composer.json` files are for development only.
 
 ## Workflow
 

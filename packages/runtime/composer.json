@@ -1,0 +1,30 @@
+{
+    "name": "stero/shield-runtime",
+    "description": "Framework-neutral runtime wiring for Shield.",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "ext-mbstring": "*",
+        "stero/shield": "dev-main",
+        "stero/shield-redis": "dev-main"
+    },
+    "repositories": [
+        {"type": "path", "url": "../core", "options": {"symlink": true}},
+        {"type": "path", "url": "../redis", "options": {"symlink": true}}
+    ],
+    "require-dev": {
+        "pestphp/pest": "^5.3",
+        "phpstan/phpstan": "^2.3",
+        "laravel/pint": "^1.32"
+    },
+    "autoload": {"psr-4": {"Shield\\Runtime\\": "src/"}},
+    "autoload-dev": {"psr-4": {"Shield\\Runtime\\Tests\\": "tests/"}},
+    "scripts": {
+        "test": "pest",
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "lint": "pint",
+        "lint:check": "pint --test",
+        "check": ["@lint:check", "@analyse", "@test"]
+    },
+    "config": {"allow-plugins": {"pestphp/pest-plugin": true}}
+}
