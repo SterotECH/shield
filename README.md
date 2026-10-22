@@ -247,16 +247,22 @@ uses the configured `shield.events_path`:
 
 ```sh
 php artisan shield:logs
-php artisan shield:logs --limit=20 --severity=high
-php artisan shield:logs --follow
+php artisan shield:logs --per-page=20 --severity=high
+php artisan shield:logs --group
 php artisan shield:logs --json
 ```
 
-`shield:logs` shows the latest 50 matching events. `--follow` shows the latest
-50 events and follows new ones until Ctrl-C. Use `--limit` to change that
-count. Filters (`--since`, `--rule`, `--ip`, `--tenant`, `--severity`,
-`--would-block`) apply to the snapshot view and cannot be combined with
-`--follow`. Both views support `--json`, `--theme` and `--no-ansi`.
+`shield:logs` reads the final 5000 log lines and shows 15 rows per page, newest
+first. Interactive terminals offer paging, filters, row inspection and incident
+grouping. Use `--page` and `--per-page` for scripted paging. Filters are
+`--since=15m|2h|7d`, `--rule`, `--ip`, `--tenant`, `--severity` (exact),
+`--verdict=blocked|would_block|any` and `--path` (case insensitive text).
+`--group` combines events for the same IP and rule until a gap exceeds 60 seconds.
+`--full` prints complete paths without wrapping, even when wider than the
+terminal. `--json` exports all filtered events as one array with original keys,
+ignoring grouping and pagination. `--file` overrides `shield.events_path`.
+Piped output and `--no-interaction` render once without prompts. Output is plain
+text. The namespaces are `Stero\Shield\Runtime` and `Stero\Shield\Laravel`.
 
 For any framework, the same viewer is available as a Composer binary:
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Shield\Laravel\Tests;
+namespace Stero\Shield\Laravel\Tests;
 
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
-use Shield\Laravel\ShieldServiceProvider;
+use Stero\Shield\Laravel\ShieldServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {

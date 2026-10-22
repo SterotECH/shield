@@ -84,12 +84,18 @@ tail -n 50 storage/shield/events.jsonl | jq .
 tail -f storage/shield/events.jsonl | jq .
 ```
 
-Laravel includes `php artisan shield:logs` (latest 50 matching events) and
-`php artisan shield:logs --follow` (follow new events, Ctrl-C to stop).
-Both use the configured `shield.events_path`. Use `--limit=20` to change the
-count. Snapshot filters: `--since`, `--rule`, `--ip`, `--tenant`, `--severity`,
-`--would-block`. Filters cannot be combined with `--follow`.
-Both views accept `--json`, `--theme` and `--no-ansi`.
+Laravel includes `php artisan shield:logs`, a paginated table using the configured
+`shield.events_path`. It reads at most the final 5000 physical lines and shows
+15 rows per page, newest first. Use `--page` and `--per-page` to navigate.
+Filters: `--ip`, `--rule`, `--severity` (exact), `--verdict=blocked|would_block|any`,
+`--tenant`, `--since=15m|2h|7d` and `--path` (case insensitive text).
+Use `--group` for incidents separated by gaps over 60 seconds, `--full` for
+complete unwrapped paths (these may exceed the terminal width), `--file` to
+override the log path, and `--json` for an unpaginated array of original events.
+Interactive terminals offer paging, filters, row inspection and group toggling.
+Piped output and `--no-interaction` render one page without a menu.
+The runtime namespace is `Stero\Shield\Runtime`; the adapter namespace is
+`Stero\Shield\Laravel`.
 Other frameworks can use `vendor/bin/shield events|tail|stats --file=/path/to/events.jsonl`.
 
 ## Event fields and meaning

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Artisan;
-use Shield\Laravel\ShieldServiceProvider;
+use Stero\Shield\Laravel\ShieldServiceProvider;
 
 beforeEach(function (): void {
     $this->installRoot = sys_get_temp_dir().'/shield-install-'.bin2hex(random_bytes(8));

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "40b7024976b7d57680d6c180e1f194fa",
+    "content-hash": "1dbbdedea8bd8e04d1758cc675c14231",
     "packages": [
         {
             "name": "nunomaduro/termwind",

@@ -25,14 +25,14 @@
         "psr-4": {
             "Stero\\Shield\\": "packages/core/src/",
             "Stero\\Shield\\Redis\\": "packages/redis/src/",
-            "Shield\\Runtime\\": "packages/runtime/src/",
-            "Shield\\Laravel\\": "packages/laravel/src/",
+            "Stero\\Shield\\Runtime\\": "packages/runtime/src/",
+            "Stero\\Shield\\Laravel\\": "packages/laravel/src/",
             "Stero\\Shield\\CLI\\": "packages/cli/src/"
         }
     },
     "extra": {
         "laravel": {
-            "providers": ["Shield\\Laravel\\ShieldServiceProvider"]
+            "providers": ["Stero\\Shield\\Laravel\\ShieldServiceProvider"]
         }
     },
     "scripts": {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Runtime\Agent;
+namespace Stero\Shield\Runtime\Agent;
 
 use InvalidArgumentException;
 

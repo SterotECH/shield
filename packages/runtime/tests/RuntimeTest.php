@@ -2,14 +2,6 @@
 
 declare(strict_types=1);
 
-use Shield\Runtime\AllowlistLoader;
-use Shield\Runtime\EngineFactory;
-use Shield\Runtime\Guard;
-use Shield\Runtime\Inspection;
-use Shield\Runtime\Settings;
-use Shield\Runtime\StatusReporter;
-use Shield\Runtime\TimingRecorder;
-use Shield\Runtime\TimingReport;
 use Stero\Shield\Decision;
 use Stero\Shield\Engine;
 use Stero\Shield\EngineConfig;
@@ -23,6 +15,14 @@ use Stero\Shield\Redis\RedisStore;
 use Stero\Shield\Rules\Phase;
 use Stero\Shield\Rules\Rule;
 use Stero\Shield\Rules\Severity;
+use Stero\Shield\Runtime\AllowlistLoader;
+use Stero\Shield\Runtime\EngineFactory;
+use Stero\Shield\Runtime\Guard;
+use Stero\Shield\Runtime\Inspection;
+use Stero\Shield\Runtime\Settings;
+use Stero\Shield\Runtime\StatusReporter;
+use Stero\Shield\Runtime\TimingRecorder;
+use Stero\Shield\Runtime\TimingReport;
 use Stero\Shield\Store\ArrayStore;
 use Stero\Shield\Store\Store;
 

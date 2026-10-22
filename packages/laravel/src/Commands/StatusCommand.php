@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Shield\Laravel\Commands;
+namespace Stero\Shield\Laravel\Commands;
 
 use Illuminate\Console\Command;
-use Shield\Runtime\Settings;
-use Shield\Runtime\StatusReporter;
 use Stero\Shield\Redis\NullStore;
+use Stero\Shield\Runtime\Settings;
+use Stero\Shield\Runtime\StatusReporter;
 use Stero\Shield\Store\Store;
 
 /** Shows runtime health without exposing request data. */

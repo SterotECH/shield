@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Shield\Laravel\Commands;
+namespace Stero\Shield\Laravel\Commands;
 
 use Illuminate\Console\Command;
-use Shield\Runtime\Settings;
-use Shield\Runtime\TimingReport;
+use Stero\Shield\Runtime\Settings;
+use Stero\Shield\Runtime\TimingReport;
 
 /** Reports sampled Shield latency against the 5 ms inline p95 budget. */
 final class TimingCommand extends Command

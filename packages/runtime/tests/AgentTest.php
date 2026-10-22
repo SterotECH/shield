@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Shield\Runtime\Agent\AgentFilesPublisher;
-use Shield\Runtime\Agent\AgentTarget;
 use Stero\Shield\Rules\SensitivePathRule;
+use Stero\Shield\Runtime\Agent\AgentFilesPublisher;
+use Stero\Shield\Runtime\Agent\AgentTarget;
 
 function agentRemove(string $path): void
 {

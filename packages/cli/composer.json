@@ -13,7 +13,7 @@
         "phpstan/phpstan": "^2.3",
         "laravel/pint": "^1.32"
     },
-    "autoload": {"psr-4": {"Stero\\Shield\\CLI\\": "src/"}},
+    "autoload": {"psr-4": {"Stero\\Shield\\CLI\\": "src/", "Stero\\Shield\\Runtime\\": "../runtime/src/"}},
     "bin": ["bin/shield"],
     "scripts": {
         "test": "pest",

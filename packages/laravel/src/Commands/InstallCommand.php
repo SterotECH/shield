@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Shield\Laravel\Commands;
+namespace Stero\Shield\Laravel\Commands;
 
 use Illuminate\Console\Command;
 use InvalidArgumentException;
-use Shield\Runtime\Agent\AgentFilesPublisher;
-use Shield\Runtime\Agent\AgentTarget;
+use Stero\Shield\Runtime\Agent\AgentFilesPublisher;
+use Stero\Shield\Runtime\Agent\AgentTarget;
 use Throwable;
 
 /** Publishes configuration and agent instructions and prepares private storage. */

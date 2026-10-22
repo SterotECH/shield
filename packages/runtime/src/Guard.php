@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Runtime;
+namespace Stero\Shield\Runtime;
 
 use Stero\Shield\Engine;
 use Stero\Shield\Http\NormalizedRequest;

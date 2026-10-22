@@ -6,6 +6,7 @@ namespace Stero\Shield\CLI;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Stero\Shield\Runtime\Sanitiser;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Throwable;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Stero\Shield\CLI;
+namespace Stero\Shield\Runtime;
 
 /** Converts untrusted text to control-free, escaped Termwind HTML text. */
 final class Sanitiser

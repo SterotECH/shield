@@ -17,8 +17,8 @@ if (($manifest["autoload"]["psr-4"]["Stero\\Shield\\CLI\\"] ?? null) !== "packag
     fwrite(STDERR, "CLI autoload or binary registration is missing\n");
     exit(1);
 }
-if (($manifest["autoload"]["psr-4"]["Shield\\Laravel\\"] ?? null) !== "packages/laravel/src/"
-    || !in_array("Shield\\Laravel\\ShieldServiceProvider", $manifest["extra"]["laravel"]["providers"] ?? [], true)) {
+if (($manifest["autoload"]["psr-4"]["Stero\\Shield\\Laravel\\"] ?? null) !== "packages/laravel/src/"
+    || !in_array("Stero\\Shield\\Laravel\\ShieldServiceProvider", $manifest["extra"]["laravel"]["providers"] ?? [], true)) {
     fwrite(STDERR, "Laravel package autoload or provider discovery is missing\n");
     exit(1);
 }
@@ -55,9 +55,15 @@ $request = Stero\Shield\Http\RequestFactory::fromGlobals([
 ], [], "");
 $decision = $engine->inspect($request, Stero\Shield\Rules\Phase::Inline);
 $fallback = new Stero\Shield\Redis\NullStore();
-$settings = Shield\Runtime\Settings::fromArray(["enabled" => true]);
-$runtimeEngine = Shield\Runtime\EngineFactory::create($settings, new Stero\Shield\Store\ArrayStore(), new Stero\Shield\Events\InMemorySink());
-$guard = new Shield\Runtime\Guard($settings, $runtimeEngine);
+$settings = Stero\Shield\Runtime\Settings::fromArray(["enabled" => true]);
+$reader = new Stero\Shield\Runtime\Events\EventReader();
+if ($reader->read("missing-events.jsonl") !== [] || $reader->reason === null
+    || Stero\Shield\Runtime\Sanitiser::forTerminal("x\e") !== "x") {
+    fwrite(STDERR, "Shared event utilities are missing or unsafe\n");
+    exit(1);
+}
+$runtimeEngine = Stero\Shield\Runtime\EngineFactory::create($settings, new Stero\Shield\Store\ArrayStore(), new Stero\Shield\Events\InMemorySink());
+$guard = new Stero\Shield\Runtime\Guard($settings, $runtimeEngine);
 $inspection = $guard->before($request);
 if (count($decision->findings) !== 1 || $decision->findings[0]->ruleId !== "sensitive-path"
     || !$decision->wouldBlock || $decision->blocked || count($sink->events()) !== 1

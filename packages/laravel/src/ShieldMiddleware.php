@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Shield\Laravel;
+namespace Stero\Shield\Laravel;
 
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
-use Shield\Runtime\Guard;
-use Shield\Runtime\Inspection;
 use Stero\Shield\Http\NormalizedRequest;
 use Stero\Shield\Http\RequestFactory;
+use Stero\Shield\Runtime\Guard;
+use Stero\Shield\Runtime\Inspection;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 

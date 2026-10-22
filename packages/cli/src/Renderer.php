@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Stero\Shield\CLI;
 
+use Stero\Shield\Runtime\Sanitiser;
 use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;

@@ -17,8 +17,8 @@
         "phpstan/phpstan": "^2.3",
         "laravel/pint": "^1.32"
     },
-    "autoload": {"psr-4": {"Shield\\Runtime\\": "src/"}},
-    "autoload-dev": {"psr-4": {"Shield\\Runtime\\Tests\\": "tests/"}},
+    "autoload": {"psr-4": {"Stero\\Shield\\Runtime\\": "src/"}},
+    "autoload-dev": {"psr-4": {"Stero\\Shield\\Runtime\\Tests\\": "tests/"}},
     "scripts": {
         "test": "pest",
         "analyse": "phpstan analyse --memory-limit=1G",

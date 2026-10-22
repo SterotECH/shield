@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Stero\Shield\CLI\Sanitiser;
+use Stero\Shield\Runtime\Sanitiser;
 
 it('strips terminal controls including ESC sequences', function (string $input, string $expected): void {
     $safe = Sanitiser::forTerminal($input);

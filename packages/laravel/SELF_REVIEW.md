@@ -49,7 +49,7 @@ All test names below are in `tests/AdapterTest.php` unless stated otherwise.
 | Requirement | Evidence | Status |
 | --- | --- | --- |
 | Read instructions first; port Task 9 reference | Read `CLAUDE.md` and its delegated instructions; read EduConect commit `0ec7c27c` | Done |
-| New package and `Shield\Laravel` namespace | Package Composer PSR-4 mapping; PHPStan max; package tests | Done |
+| New package and `Stero\Shield\Laravel` namespace | Package Composer PSR-4 mapping; PHPStan max; package tests | Done |
 | Laravel 13 Illuminate support, HTTP and console | Composer requires each at `^13.0`; lock tests Laravel 13.38.0 | Done |
 | Path repositories for other packages | Package Composer repositories for core, Redis and runtime | Done |
 | Testbench, Pest, PHPStan max and Pint | Package Composer dependencies, scripts and configs; `composer check` | Done |

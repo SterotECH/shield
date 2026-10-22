@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Runtime;
+namespace Stero\Shield\Runtime;
 
 /** @param list<string> $entries */
 final readonly class AllowlistResult

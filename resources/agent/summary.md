@@ -7,7 +7,7 @@
 5. Use ext-redis and dedicated Redis database 5, never database 0 or the cache database; NullStore cannot persist bans.
 6. Preserve fail-open and expiring, escalating bans; only banWorthy honeypot findings cause bans, never rate-based signals.
 7. Return 404 with Cache-Control: no-store, private for security blocks, never 403; never ban or block allowlisted, invalid or unknown IPs.
-8. Never log bodies, cookies, Authorization headers, tokens or form values; use `php artisan shield:logs` or `shield:logs --follow` in Laravel. All frameworks can use `vendor/bin/shield events|tail|stats --file=/path/to/events.jsonl`. The viewer is included.
+8. Never log bodies, cookies, Authorization headers, tokens or form values; use `php artisan shield:logs` in Laravel (15 rows per page, interactive filters and inspection). Use `--group` for incidents, `--json` for an event array, `--page` and `--per-page` for paging. All frameworks can use `vendor/bin/shield events|tail|stats --file=/path/to/events.jsonl`. Namespaces use `Stero\Shield\Runtime` and `Stero\Shield\Laravel`.
 9. Restore client IPs in Nginx, never forwarded headers in PHP; keep middleware prepended globally before tenancy and sessions.
 10. Never edit vendor or core defaults for false positives: sensitive_paths replaces the full default list; use allowlist entries for individual clients and skip_prefixes for exclusions; add rules only in Shield with attack and normal corpus files.
 

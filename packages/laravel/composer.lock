@@ -3196,7 +3196,7 @@
             "dist": {
                 "type": "path",
                 "url": "../runtime",
-                "reference": "7e9919e956962a9e9e9eacc728298efd171bcd9c"
+                "reference": "2b93b4f0c875af3ab78c0777bb7026fb11aac04a"
             },
             "require": {
                 "ext-mbstring": "*",
@@ -3212,12 +3212,12 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Shield\\Runtime\\": "src/"
+                    "Stero\\Shield\\Runtime\\": "src/"
                 }
             },
             "autoload-dev": {
                 "psr-4": {
-                    "Shield\\Runtime\\Tests\\": "tests/"
+                    "Stero\\Shield\\Runtime\\Tests\\": "tests/"
                 }
             },
             "scripts": {

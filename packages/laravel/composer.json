@@ -23,8 +23,8 @@
         "phpstan/phpstan": "^2.3",
         "laravel/pint": "^1.32"
     },
-    "autoload": {"psr-4": {"Shield\\Laravel\\": "src/", "Stero\\Shield\\CLI\\": "../cli/src/"}},
-    "autoload-dev": {"psr-4": {"Shield\\Laravel\\Tests\\": "tests/"}},
+    "autoload": {"psr-4": {"Stero\\Shield\\Laravel\\": "src/", "Stero\\Shield\\CLI\\": "../cli/src/"}},
+    "autoload-dev": {"psr-4": {"Stero\\Shield\\Laravel\\Tests\\": "tests/"}},
     "scripts": {
         "test": "pest",
         "analyse": "phpstan analyse --memory-limit=1G",

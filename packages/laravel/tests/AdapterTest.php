@@ -9,10 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
-use Shield\Laravel\ShieldMiddleware;
-use Shield\Laravel\ShieldServiceProvider;
-use Shield\Runtime\Guard;
-use Shield\Runtime\Settings;
 use Stero\Shield\Engine;
 use Stero\Shield\EngineConfig;
 use Stero\Shield\Events\EventSink;
@@ -20,10 +16,14 @@ use Stero\Shield\Events\JsonLinesSink;
 use Stero\Shield\Events\SecurityEvent;
 use Stero\Shield\Finding;
 use Stero\Shield\Http\NormalizedRequest;
+use Stero\Shield\Laravel\ShieldMiddleware;
+use Stero\Shield\Laravel\ShieldServiceProvider;
 use Stero\Shield\Redis\NullStore;
 use Stero\Shield\Rules\Phase;
 use Stero\Shield\Rules\Rule;
 use Stero\Shield\Rules\Severity;
+use Stero\Shield\Runtime\Guard;
+use Stero\Shield\Runtime\Settings;
 use Stero\Shield\Store\ArrayStore;
 use Stero\Shield\Store\Store;
 use Symfony\Component\HttpFoundation\Response;
@@ -148,7 +148,7 @@ afterEach(function (): void {
 it('is listed for Laravel auto-discovery in the root package manifest', function (): void {
     $manifest = json_decode(file_get_contents(dirname(__DIR__, 3).'/composer.json') ?: '', true, flags: JSON_THROW_ON_ERROR);
     expect($manifest['extra']['laravel']['providers'])->toContain(ShieldServiceProvider::class)
-        ->and($manifest['autoload']['psr-4']['Shield\\Laravel\\'])->toBe('packages/laravel/src/')
+        ->and($manifest['autoload']['psr-4']['Stero\\Shield\\Laravel\\'])->toBe('packages/laravel/src/')
         ->and(app()->getProvider(ShieldServiceProvider::class))->toBeInstanceOf(ShieldServiceProvider::class);
 });
 

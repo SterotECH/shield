@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shield\Laravel;
+namespace Stero\Shield\Laravel;
 
 use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Foundation\Application;
@@ -10,20 +10,20 @@ use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 use Redis;
-use Shield\Laravel\Commands\InstallCommand;
-use Shield\Laravel\Commands\LogsCommand;
-use Shield\Laravel\Commands\StatusCommand;
-use Shield\Laravel\Commands\TimingCommand;
-use Shield\Runtime\EngineFactory;
-use Shield\Runtime\Guard;
-use Shield\Runtime\Settings;
-use Shield\Runtime\TimingRecorder;
 use Stero\Shield\Events\EventSink;
 use Stero\Shield\Events\JsonLinesSink;
+use Stero\Shield\Laravel\Commands\InstallCommand;
+use Stero\Shield\Laravel\Commands\LogsCommand;
+use Stero\Shield\Laravel\Commands\StatusCommand;
+use Stero\Shield\Laravel\Commands\TimingCommand;
 use Stero\Shield\Redis\NullStore;
 use Stero\Shield\Redis\PhpRedisClient;
 use Stero\Shield\Redis\RedisConnector;
 use Stero\Shield\Redis\RedisStore;
+use Stero\Shield\Runtime\EngineFactory;
+use Stero\Shield\Runtime\Guard;
+use Stero\Shield\Runtime\Settings;
+use Stero\Shield\Runtime\TimingRecorder;
 use Stero\Shield\Store\Store;
 use Throwable;
 
