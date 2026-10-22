@@ -1,0 +1,11 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "declare_strict_types": true,
+        "final_class": true,
+        "ordered_imports": {"sort_algorithm": "alpha"},
+        "single_line_empty_body": false,
+        "trailing_comma_in_multiline": true
+    },
+    "exclude": ["vendor", ".phpstan-cache", ".pest"]
+}

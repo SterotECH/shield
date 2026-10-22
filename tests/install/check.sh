@@ -2,6 +2,15 @@
 set -eu
 
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+php -r '
+declare(strict_types=1);
+$manifest = json_decode(file_get_contents($argv[1]), true, flags: JSON_THROW_ON_ERROR);
+if (($manifest["autoload"]["psr-4"]["Shield\\Laravel\\"] ?? null) !== "packages/laravel/src/"
+    || !in_array("Shield\\Laravel\\ShieldServiceProvider", $manifest["extra"]["laravel"]["providers"] ?? [], true)) {
+    fwrite(STDERR, "Laravel package autoload or provider discovery is missing\n");
+    exit(1);
+}
+' "$repo/composer.json"
 temporary=$(mktemp -d "$repo/tests/install/.check.XXXXXX")
 trap 'rm -rf -- "$temporary"' EXIT HUP INT TERM
 

@@ -26,8 +26,9 @@ composer config repositories.shield vcs https://github.com/sterotech/shield
 composer require 'stero/shield:dev-main'
 ```
 
-The package includes the core engine and Redis store. There is no framework
-service provider or automatic middleware registration. Your application calls
+The package includes the core engine, Redis store, framework-neutral runtime
+and Laravel 13 adapter. Laravel discovers the service provider automatically;
+middleware is registered when Shield is enabled. Other applications can call
 the engine explicitly. The CLI viewer is used from a repository clone; see
 "View events" below.
 
@@ -180,6 +181,49 @@ access and arrange log rotation. Shield does not rotate files. Rules, stores
 and sinks are designed to fail open, so check that events are actually being
 written before relying on them.
 
+## Use Shield with Laravel 13
+
+Install Shield in a Laravel 13 application with Composer:
+
+```sh
+composer require stero/shield
+php artisan shield:install
+```
+
+Laravel discovers the Shield service provider automatically. The install
+command publishes `config/shield.php` and creates `storage/shield` with
+permissions `0775`. It prints suggested flags and never edits `.env`. Configure
+the flags you need:
+
+```dotenv
+SHIELD_ENABLED=false
+SHIELD_MODE=detect
+SHIELD_REDIS_HOST=127.0.0.1
+SHIELD_REDIS_PORT=6379
+SHIELD_REDIS_PASSWORD=
+SHIELD_REDIS_DB=5
+SHIELD_ALLOWLIST_FILE=/absolute/path/to/storage/shield/allowlist.txt
+SHIELD_ALLOWLIST_EXTRA=
+SHIELD_TIMING=false
+```
+
+Shield is off by default. Enable it after reviewing the settings with
+`SHIELD_ENABLED=true`; leave `SHIELD_MODE=detect` while checking events. Run
+`php artisan shield:status` to check Redis, event storage and allowlist status.
+The command exits with status 1 when enabled Shield cannot use its store or
+write to the events folder. Set `SHIELD_ENABLED=false` to switch Shield off.
+
+Events are written as JSON Lines to `storage/shield/events.jsonl` by default.
+Read them with the separate Shield CLI, for example
+`bin/shield events --file=storage/shield/events.jsonl`, or follow new events
+with `bin/shield tail --file=storage/shield/events.jsonl`. Enable
+`SHIELD_TIMING=true` and run `php artisan shield:timing` to review sampled
+latency.
+
+Behind Cloudflare or another proxy, configure the web server to restore the
+real client IP before PHP receives the request. The Laravel adapter never
+reads `X-Forwarded-For` or other forwarded client IP headers.
+
 ## View events
 
 The CLI is separate from the installed library. From a repository clone:
@@ -212,7 +256,8 @@ written to `packages/core/demo/.state/events.jsonl`. Restart with
 ## Run the tests
 
 Run `composer install` and `composer check` in each of `packages/core`,
-`packages/redis` and `packages/cli`. Core tests include the attack and normal
+`packages/redis`, `packages/runtime`, `packages/laravel` and `packages/cli`.
+Core tests include the attack and normal
 request corpus. Redis integration tests require `SHIELD_TEST_REDIS=host:port`;
 otherwise they skip. From the repository root, run `sh tests/install/check.sh`
 to test installation through Composer.

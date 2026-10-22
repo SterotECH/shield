@@ -1,0 +1,36 @@
+{
+    "name": "stero/shield-laravel",
+    "description": "Laravel adapter for Shield.",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "ext-mbstring": "*",
+        "illuminate/console": "^13.0",
+        "illuminate/http": "^13.0",
+        "illuminate/support": "^13.0",
+        "stero/shield": "dev-main",
+        "stero/shield-redis": "dev-main",
+        "stero/shield-runtime": "dev-main"
+    },
+    "repositories": [
+        {"type": "path", "url": "../core", "options": {"symlink": true}},
+        {"type": "path", "url": "../redis", "options": {"symlink": true}},
+        {"type": "path", "url": "../runtime", "options": {"symlink": true}}
+    ],
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^5.3",
+        "phpstan/phpstan": "^2.3",
+        "laravel/pint": "^1.32"
+    },
+    "autoload": {"psr-4": {"Shield\\Laravel\\": "src/"}},
+    "autoload-dev": {"psr-4": {"Shield\\Laravel\\Tests\\": "tests/"}},
+    "scripts": {
+        "test": "pest",
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "lint": "pint",
+        "lint:check": "pint --test",
+        "check": ["@lint:check", "@analyse", "@test"]
+    },
+    "config": {"allow-plugins": {"pestphp/pest-plugin": true}}
+}

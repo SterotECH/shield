@@ -11,12 +11,21 @@
     },
     "authors": [{"name": "Stero Tech Inc."}],
     "require": {"ext-mbstring": "*", "php": "^8.5"},
-    "suggest": {"ext-redis": "Required for the Redis store"},
+    "suggest": {
+        "ext-redis": "Required for the Redis store",
+        "laravel/framework": "Required to use the Laravel adapter"
+    },
     "autoload": {
         "psr-4": {
             "Stero\\Shield\\": "packages/core/src/",
             "Stero\\Shield\\Redis\\": "packages/redis/src/",
-            "Shield\\Runtime\\": "packages/runtime/src/"
+            "Shield\\Runtime\\": "packages/runtime/src/",
+            "Shield\\Laravel\\": "packages/laravel/src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": ["Shield\\Laravel\\ShieldServiceProvider"]
         }
     },
     "config": {"sort-packages": true}

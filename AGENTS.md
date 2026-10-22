@@ -13,11 +13,15 @@ simpler option and say what you assumed.
     packages/core/src      the engine (pure PHP, no framework)
     packages/core/tests    Pest tests
     packages/core/demo     plain PHP demo, run with php -S
+    packages/redis        Redis store and fail-open fallback
+    packages/runtime      framework-neutral settings and request lifecycle
+    packages/laravel      Laravel 13 provider, middleware and commands
+    packages/cli          terminal event viewer
     tests/corpus/attacks   one JSON request per file, must trigger rules
     tests/corpus/normal    one JSON request per file, must trigger nothing
 
-There is no Laravel package and no lab app. Framework glue (about 15 lines
-of middleware) lives inside each host app, never in this repo.
+Framework adapters translate requests and decisions. Shared security
+behaviour belongs in core and runtime.
 
 ## Architecture in one minute
 

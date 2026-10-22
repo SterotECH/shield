@@ -31,10 +31,8 @@ final class Guard
             if (! mb_check_encoding($path, 'UTF-8')) {
                 return false;
             }
-            foreach ($this->settings->skipPrefixes as $prefix) {
-                if (mb_check_encoding($prefix, 'UTF-8') && mb_strpos($path, $prefix, 0, 'UTF-8') === 0) {
-                    return true;
-                }
+            if (array_any($this->settings->skipPrefixes, fn($prefix) => mb_check_encoding($prefix, 'UTF-8') && mb_strpos($path, $prefix, 0, 'UTF-8') === 0)) {
+                return true;
             }
         } catch (Throwable) {
         }

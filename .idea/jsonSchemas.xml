@@ -17,6 +17,9 @@
                   <Item>
                     <option name="path" value="packages/cli/composer.json" />
                   </Item>
+                  <Item>
+                    <option name="path" value="packages/laravel/composer.json" />
+                  </Item>
                 </list>
               </option>
             </SchemaInfo>

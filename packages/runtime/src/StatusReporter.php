@@ -15,8 +15,8 @@ final class StatusReporter
     /** @param null|callable(string, int, ?string, int, int, int): ?object $connector */
     public static function report(Settings $settings, ?callable $connector = null): StatusReport
     {
-        $fileEntries = (new AllowlistLoader())->load($settings->allowlistFile, []);
-        $extraEntries = (new AllowlistLoader())->load(null, $settings->allowlistExtra);
+        $fileEntries = new AllowlistLoader()->load($settings->allowlistFile, []);
+        $extraEntries = new AllowlistLoader()->load(null, $settings->allowlistExtra);
         $connection = null;
         $connected = false;
         $ping = false;
