@@ -3,20 +3,33 @@
     "description": "Framework-agnostic intrusion detection and prevention layer for PHP web apps.",
     "type": "library",
     "license": "MIT",
-    "keywords": ["security", "ids", "ips", "waf", "middleware", "php"],
+    "keywords": [
+        "security",
+        "ids",
+        "ips",
+        "waf",
+        "middleware",
+        "php"
+    ],
     "homepage": "https://github.com/sterotech/shield",
     "support": {
         "issues": "https://github.com/sterotech/shield/issues",
         "source": "https://github.com/sterotech/shield"
     },
-    "authors": [{"name": "Stero Tech Inc."}],
+    "authors": [
+        {
+            "name": "Stero Tech Inc."
+        }
+    ],
     "require": {
         "ext-mbstring": "*",
         "php": "^8.5",
         "symfony/console": "^7.4 || ^8.0",
         "nunomaduro/termwind": "^2.3"
     },
-    "bin": ["packages/cli/bin/shield"],
+    "bin": [
+        "packages/cli/bin/shield"
+    ],
     "suggest": {
         "ext-redis": "Required for the Redis store",
         "laravel/framework": "Required to use the Laravel adapter"
@@ -32,7 +45,9 @@
     },
     "extra": {
         "laravel": {
-            "providers": ["Stero\\Shield\\Laravel\\ShieldServiceProvider"]
+            "providers": [
+                "Stero\\Shield\\Laravel\\ShieldServiceProvider"
+            ]
         }
     },
     "scripts": {
@@ -45,5 +60,7 @@
             "sh tests/install/check.sh"
         ]
     },
-    "config": {"sort-packages": true}
+    "config": {
+        "sort-packages": true
+    }
 }
